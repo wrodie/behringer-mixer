@@ -27,7 +27,7 @@ class OSCClientServer(BlockingOSCUDPServer):
         self.socket.sendto(msg.dgram, self.mixer_address)
 
 
-class MixerBase():
+class MixerBase:
     """Handles the communication with the mixer via the OSC protocol"""
 
     logger = logging.getLogger("beheringermixer.behringermixer")
@@ -100,9 +100,15 @@ class MixerBase():
     def subscribe(self, callback_function):
         self._subscribe("/xremote", callback_function)
 
-
     def _subscribe(self, parameter_string, callback_function):
-        self.subscription = threading.Thread(target=self._subscribe_worker, args=(parameter_string, callback_function,), daemon=True)
+        self.subscription = threading.Thread(
+            target=self._subscribe_worker,
+            args=(
+                parameter_string,
+                callback_function,
+            ),
+            daemon=True,
+        )
         self.subscription.start()
 
     def _subscribe_worker(self, parameter_string, callback_function, *other_params):
@@ -145,16 +151,20 @@ class MixerBase():
         for address_row in self.addresses_to_load:
             address = address_row[0]
             rewrite_address = address_row[1] if len(address_row) > 1 else None
-            matches = re.search(r'\{(.*?)(:(\d)){0,1}\}', address)
+            matches = re.search(r"\{(.*?)(:(\d)){0,1}\}", address)
             if matches:
                 match_var = matches.group(1)
                 max_count = getattr(self, match_var)
                 zfill_num = int(matches.group(3) or 0) or len(str(max_count))
-                for number in range(1, max_count+1):
-                    new_address = address.replace('{' + match_var + '}', str(number).zfill(zfill_num))
+                for number in range(1, max_count + 1):
+                    new_address = address.replace(
+                        "{" + match_var + "}", str(number).zfill(zfill_num)
+                    )
                     expanded_addresses.append(new_address)
                     if rewrite_address:
-                        new_rewrite_address = rewrite_address.replace('{' + match_var + '}', str(number).zfill(zfill_num))
+                        new_rewrite_address = rewrite_address.replace(
+                            "{" + match_var + "}", str(number).zfill(zfill_num)
+                        )
                         self._rewrites[new_address] = new_rewrite_address
             else:
                 expanded_addresses.append(address)
@@ -162,7 +172,6 @@ class MixerBase():
                     self._rewrites[address] = rewrite_address
         for address in expanded_addresses:
             self.send(address)
-
 
     def _update_state(self, address, values):
         # update internal state representation
@@ -181,33 +190,33 @@ class MixerBase():
                 # Therefore we want to ignore data
                 return updates
 
-            if state_key.endswith('_on'):
+            if state_key.endswith("_on"):
                 value = bool(value)
-            state_key = re.sub(r'/0+(\d+)/', r'/\1/', state_key)
+            state_key = re.sub(r"/0+(\d+)/", r"/\1/", state_key)
             self._state[state_key] = value
-            updates.append({ "property": state_key, "value": value})
-            if state_key.endswith('_fader'):
+            updates.append({"property": state_key, "value": value})
+            if state_key.endswith("_fader"):
                 db_val = fader_to_db(value)
-                self._state[state_key + '_db'] = db_val
-                updates.append({ "property": state_key + '_db', "value": db_val})
+                self._state[state_key + "_db"] = db_val
+                updates.append({"property": state_key + "_db", "value": db_val})
         return updates
 
     @staticmethod
     def _generate_state_key(address):
         # generate a key for use by state from the address
         prefixes = [
-            r'^/ch/\d+/',
-            r'^/bus/\d+/',
-            r'^/dca/\d+/',
-            r'^/mtx/\d+/',
-            r'^/main/[a-z]+/',
+            r"^/ch/\d+/",
+            r"^/bus/\d+/",
+            r"^/dca/\d+/",
+            r"^/mtx/\d+/",
+            r"^/main/[a-z]+/",
         ]
         for prefix in prefixes:
             match = re.match(prefix, address)
             if match:
-                key_prefix = address[:match.span()[1]]
-                key_string = address[match.span()[1]:]
-                key_string = key_string.replace('/', '_')
+                key_prefix = address[: match.span()[1]]
+                key_string = address[match.span()[1] :]
+                key_string = key_string.replace("/", "_")
                 return key_prefix + key_string
         return address
 
@@ -217,14 +226,14 @@ class MixerBase():
             self._rewrites_reverse = {v: k for k, v in self._rewrites.items()}
 
     def set_value(self, address, value):
-        if address.endswith('_db'):
-            address = address.replace('_db', '')
+        if address.endswith("_db"):
+            address = address.replace("_db", "")
             value = db_to_fader(value)
         if value == False:
             value = 0
         if value == True:
             value = 1
-        address = address.replace('_', '/')
+        address = address.replace("_", "/")
         address = self._redo_padding(address)
         self._build_reverse_rewrite()
         rewrite_key = self._rewrites_reverse.get(address)
@@ -232,8 +241,7 @@ class MixerBase():
             address = rewrite_key
         self.send(address, value)
         self.query(address)
-        #self._update_state(address, [value])
-
+        # self._update_state(address, [value])
 
     def _redo_padding(self, address):
         # Go through address and see if it matches with one of the known address
@@ -241,7 +249,7 @@ class MixerBase():
 
         for address_row in self.addresses_to_load:
             initial_address = address_row[0]
-            matches = re.search(r'^(.*)/{(num_[a-z]+?)(:(\d)){0,1}}', initial_address)
+            matches = re.search(r"^(.*)/{(num_[a-z]+?)(:(\d)){0,1}}", initial_address)
             if matches:
                 init_string = matches.group(1)
                 if address.startswith(init_string):
@@ -249,5 +257,8 @@ class MixerBase():
                     zfill_num = int(matches.group(4) or 0) or len(str(max_count))
                     sub_match = re.search(r"^" + init_string + r"/(\d+)/", address)
                     num = sub_match.group(1)
-                    address = address.replace(f"{init_string}/{num}/", f"{init_string}/" + str(num).zfill(zfill_num) + '/')
+                    address = address.replace(
+                        f"{init_string}/{num}/",
+                        f"{init_string}/" + str(num).zfill(zfill_num) + "/",
+                    )
         return address

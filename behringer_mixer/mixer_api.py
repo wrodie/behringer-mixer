@@ -1,5 +1,6 @@
 from .mixer_types import make_mixer
 
+
 def connect(mixer_type: str, *args, **kwargs):
     """
     Interface entry point. Wraps factory expression and handles errors

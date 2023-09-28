@@ -12,6 +12,7 @@ def fader_to_db(retval):
     else:
         return -90
 
+
 def db_to_fader(val):
     if val >= 10:
         return 1
