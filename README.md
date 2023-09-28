@@ -33,6 +33,9 @@ pip install behringer-mixer
 
 ### Example
 ```python
+
+from behringer_mixer import mixer_api
+
 def updates_function(data):
     print(f"The property {data.property} has been set to {data.value}")
 
@@ -53,7 +56,7 @@ The data returned by both the `state` and `subscription` callback function is ba
 Each key is a mixture of a base 'group' key eg `/ch/1/` and a more specific key.  
 They keys have also been altered slightly to maintain a consistent approach between different mixers. eg. For channel/bus numbers the leading zero has been removed. on the XAir mixers the main fader is `/main/lr` whereas on the X32 it is `/main/st`.  This modules returns both as `/main/st`.
 
-#### `behringer_mixer.connect("<mixer_type>", ip="<ip_address>")`
+#### `mixer_api.connect("<mixer_type>", ip="<ip_address>")`
 The code is written to support the following mixer types:
 - `X32`
 - `XR18`
@@ -133,7 +136,7 @@ This is a low level call and returns the response of a previous `send` call.
 
 
 
-### Tests
+## Tests
 
 These tests attempt to connect to a mixer to exercise get/set from the channels.
 The tests will change the state of the mixer, so it is recommended you save the current settings before running.
