@@ -59,7 +59,6 @@ class MixerBase:
         self.server.serve_forever()
 
     def msg_handler(self, addr, *data):
-        print(f"received: {addr} {data if data else ''}")
         self.logger.debug(f"received: {addr} {data if data else ''}")
         updates = self._update_state(addr, data)
         if self._callback_function:
@@ -69,7 +68,6 @@ class MixerBase:
             self._info_response = data[:]
 
     def send(self, addr: str, param: Optional[str] = None):
-        print(f"sending: {addr} {param if param is not None else ''}")
         self.logger.debug(f"sending: {addr} {param if param is not None else ''}")
         self.server.send_message(addr, param)
         self._info_response = None
