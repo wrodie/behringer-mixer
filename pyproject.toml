@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "behringer_mixer"
+version = "0.0.1"
+description = "Module to get basic information from Behringer digital mixers eg X32/XAir etc."
+authors = ["wrodie <warren@rodie.net>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/wrodie/behringer-mixer"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-osc = "^1.8.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.2"
+pytest-randomly = "^3.12.0"
+black = "^22.6.0"
+isort = "^5.10.1"
