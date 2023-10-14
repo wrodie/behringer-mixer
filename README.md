@@ -3,7 +3,7 @@ Python module to get basic information from Behringer digital mixers eg X32/XAir
 
 Initial inspiration (and some code) comes from https://github.com/onyx-and-iris/xair-api-python.
 
-## What it does and what is doesn't do.
+## What it does and what it doesn't do.
 This module is a simple interface to a series of Behringer digital mixers.  It does NOT support all parameters or controls.  It is primarily focussed on getting and setting fader information.  It supports getting this information, both on a once off basis and subscribing for real-time updates.
 
 It currently supports the following functionality for all channels/busses/matrices/dcas/main/lr:
