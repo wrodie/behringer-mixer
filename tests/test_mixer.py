@@ -19,7 +19,6 @@ async def test_mixer():
     await mixer.reload()
     print(mixer)
 
-    # with mixer_api.connect(config.get("mixer_type"), ip=config.get("ip")) as mixer:
     #Test channels
     await fader_sub_test(mixer, 'ch', 32)
     await fader_sub_test(mixer, 'ch', mixer.num_channel)
