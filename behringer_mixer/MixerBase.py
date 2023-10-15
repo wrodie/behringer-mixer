@@ -1,4 +1,5 @@
 import re
+import asyncio
 import logging
 import threading
 import time
@@ -12,7 +13,7 @@ from pythonosc.dispatcher import Dispatcher
 class MixerBase:
     """Handles the communication with the mixer via the OSC protocol"""
 
-    logger = logging.getLogger("beheringermixer.behringermixer")
+    logger = logging.getLogger("behringermixer.behringermixer")
 
     _CONNECT_TIMEOUT = 0.5
 
@@ -27,24 +28,16 @@ class MixerBase:
         if not self.ip:
             raise MixerError("No valid ip detected")
 
-        dispatcher = Dispatcher()
-        dispatcher.set_default_handler(self.msg_handler)
         self._callback_function = None
         self.subscription = None
         self._state = {}
         self._rewrites = {}
         self._rewrites_reverse = {}
-        self.server = OSCClientServer((self.ip, self.port), dispatcher)
+        self.server = None
 
-    def __enter__(self):
-        self.worker = threading.Thread(target=self.run_server, daemon=True)
-        self.worker.start()
-        self.validate_connection()
-        return self
-
-    def validate_connection(self):
-        self.send("/xinfo")
-        time.sleep(self._CONNECT_TIMEOUT)
+    async def validate_connection(self):
+        await self.send("/xinfo")
+        await asyncio.sleep(self._CONNECT_TIMEOUT)
         if not self.info_response:
             raise MixerError(
                 "Failed to setup OSC connection to mixer. Please check for correct ip address."
@@ -57,10 +50,20 @@ class MixerBase:
     def info_response(self):
         return self._info_response
 
-    def run_server(self):
-        self.server.serve_forever()
+    async def connectserver(self):
+        await self.startup()
+        #asyncio.run(self.startup())
+
+    async def startup(self):
+        dispatcher = Dispatcher()
+        dispatcher.set_default_handler(self.msg_handler)
+        self.server = OSCClientServer((self.ip, self.port), dispatcher, asyncio.get_event_loop())
+        transport, protocol = await self.server.create_serve_endpoint()
+        self.server.register_transport(transport)
+        await self.validate_connection()
 
     def msg_handler(self, addr, *data):
+        print(f"received: {addr} {data if data else ''}")
         self.logger.debug(f"received: {addr} {data if data else ''}")
         updates = self._update_state(addr, data)
         if self._callback_function:
@@ -69,14 +72,15 @@ class MixerBase:
         else:
             self._info_response = data[:]
 
-    def send(self, addr: str, param: Optional[str] = None):
+    async def send(self, addr: str, param: Optional[str] = None):
+        print(f"sending: {addr} {param if param is not None else ''}")
         self.logger.debug(f"sending: {addr} {param if param is not None else ''}")
         self.server.send_message(addr, param)
         self._info_response = None
-        time.sleep(self._delay)
+        await asyncio.sleep(self._delay)
 
-    def query(self, address):
-        self.send(address)
+    async def query(self, address):
+        await self.send(address)
         return self.info_response
 
     def subscribe(self, callback_function):
@@ -93,24 +97,25 @@ class MixerBase:
         )
         self.subscription.start()
 
-    def _subscribe_worker(self, parameter_string, callback_function, *other_params):
+    async def _subscribe_worker(self, parameter_string, callback_function, *other_params):
         self._callback_function = callback_function
-        self.send(parameter_string)
+        await self.send(parameter_string)
         renew_string = "/renew"
         if parameter_string == "/xremote":
             renew_string = "/xremote"
         while self._callback_function:
-            time.sleep(9)
-            self.send(renew_string)
+            await asyncio.sleep(9)
+            await self.send(renew_string)
         return True
 
-    def unsubscribe(self):
-        self.send("/unsubscribe")
+    async def unsubscribe(self):
+        await self.send("/unsubscribe")
         self._callback_function = None
         return True
 
     def __exit__(self, exc_type, exc_value, exc_tr):
-        self.server.shutdown()
+        # self.server.shutdown()
+        pass
 
     def state(self, key=None):
         # Return current mixer state
@@ -118,16 +123,16 @@ class MixerBase:
             return self._state.get(key)
         return self._state
 
-    def load_scene(self, scene_number):
+    async def load_scene(self, scene_number):
         # Return current mixer state
-        self.send(self.cmd_scene_load, scene_number)
+        await self.send(self.cmd_scene_load, scene_number)
 
-    def reload(self):
+    async def reload(self):
         # Reload state
         self._state = {}
-        self._load_initial()
+        await self._load_initial()
 
-    def _load_initial(self):
+    async def _load_initial(self):
         # Load initial state
         expanded_addresses = []
         for address_row in self.addresses_to_load:
@@ -153,7 +158,7 @@ class MixerBase:
                 if rewrite_address:
                     self._rewrites[address] = rewrite_address
         for address in expanded_addresses:
-            self.send(address)
+            await self.send(address)
 
     def _update_state(self, address, values):
         # update internal state representation
@@ -207,7 +212,7 @@ class MixerBase:
         if not self._rewrites_reverse:
             self._rewrites_reverse = {v: k for k, v in self._rewrites.items()}
 
-    def set_value(self, address, value):
+    async def set_value(self, address, value):
         if address.endswith("_db"):
             address = address.replace("_db", "")
             value = db_to_fader(value)
@@ -221,8 +226,8 @@ class MixerBase:
         rewrite_key = self._rewrites_reverse.get(address)
         if rewrite_key:
             address = rewrite_key
-        self.send(address, value)
-        self.query(address)
+        await self.send(address, value)
+        await self.query(address)
         # self._update_state(address, [value])
 
     def _redo_padding(self, address):
