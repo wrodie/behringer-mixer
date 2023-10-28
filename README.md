@@ -8,8 +8,8 @@ This module is a simple interface to a series of Behringer digital mixers.  It d
 
 It currently supports the following functionality for all channels/busses/matrices/dcas/main/lr:
 - Fader Value (float and dB) [get/set]
-- Fader Mute status(float and dB) [get/set]
-- Fader Name (float and dB) [get]
+- Fader Mute status [get/set]
+- Fader Name [get]
 
 It also supports
 - Current scene/snapshot [get]
@@ -21,36 +21,38 @@ If you want a module that allows you to control the full functionality of the mi
 
 -   Python 3.10 or greater
 
-<!--## Installation
+## Installation
 
 ```
 pip install behringer-mixer
 ```
--->
 
 ## Usage
 
+This module depends on the asyncio module to handle multiple runnings tasks simultaneously.
 
 ### Example
 ```python
-
+import asyncio
+import logging
 from behringer_mixer import mixer_api
 
 def updates_function(data):
-    print(f"The property {data.property} has been set to {data.value}")
+    print(f"The property {data.get('property')} has been set to {data.get('value')}")
 
-def main():
-    mixer  = mixer_api.connect("X32", ip="192.168.201.149")
-    mixer.start()
+async def main():
+    mixer  = mixer_api.connect("X32", ip="192.168.201.149", logLevel=logging.WARNING)
+    await mixer.start()
+    state = await mixer.reload()
     state = mixer.state()
     print(state)
-    mixer.subscribe(updates_function)
-    mixer.set_value("/ch/1/mix_fader", 0)
+    asyncio.create_task(mixer.subscribe(updates_function))
+    await mixer.set_value("/ch/1/mix_fader", 10)
+    await asyncio.sleep(20)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
 ```
-### mixer.mixer_info()
 
 ### Property Keys
 The data returned by both the `state` and `subscription` callback function is based on a number of property keys for the mixer.  While these keys are 'similar' to the values used in the OSC commands they are not always the same.
@@ -68,15 +70,74 @@ The code is written to support the following mixer types:
 
 The following keyword arguments may be passed:
 
--   `ip`: ip address of the mixer
+-   `ip`: ip address of the mixer (Required)
 -   `port`: mixer port, defaults to 10023 for x32 and 10024 for xair
 -   `delay`: a delay between each command, defaults to 20ms.
     -   a note about delay, stability may rely on network connection. For wired connections the delay can be safely reduced.  
+-   `logLevel': the level of logging, defaults to warning (enums from logging eg logging.DEBUG)
 
 On connection, the function requests the current state of the appropriate faders from the mixer.  This results in a number of OSC messages being sent.  If you have problems receiving all this data, then tweaking the delay setting may be appropriate.
 
-#### `mixer.state()`
+#### mixer.info()
+Returns information about the mixer, giving the number of channels/busses etc as well as the base part of the 'address' for that component.
+```
+        {
+            "channel": {
+                "number": 32,
+                "base_address": "ch",
+            },
+            "bus": {
+                "number": 16,
+                "base_address": "bus",
+            },
+            "matrix": {
+                "number": 6,
+                "base_address": "mtx",
+            },
+            "dca": {
+                "number": 8,
+                "base_address": "dca",
+            },
+            "fx": {
+                "number": 10,
+                "base_address": "fx",
+            },
+            "auxrtn": {
+                "number": 8,
+                "base_address": "auxrtn",
+            },
+            "scenes": {
+                "number": 100,
+                "base_address": "scene",
+            },
+        }
+```
+
+#### async `mixer.load_scene(scene_number)`
+Changes the current/scene snapshot of the mixer.
+`scene_number` is the index
+
+#### async `mixer.query(address)` (Low Level Call)
+This is a low level call and returns the response of a previous `send` call.
+
+#### async `mixer.reload()`
+Causes the the mixer to be requeried for it's current state. This only updates the modules internal state.  You would then need to call `mixer.state()` to receive the updated state.
+
+#### async `mixer.send(address, value)` (Low Level Call)
+This is a low level call to send an OSC message to the mixer.  As this is a low level call, the address of the OSC message being sent would have to conform to that required by the mixer in its documenation, no changing of the address is performed.  This call does not update the internal state
+
+#### async `mixer.set_value(address, value)`
+Tells the mixer to update a particular field parameter to the `value` specified.
+`address` should be in the format returned by the `mixer.state()` call.
+`value` should be in a format appropriate to the address being used. The module does no checking on the appropriateness of the value.
+This call also updates the internal state of the module.
+
+#### async `mixer.start()`
+Starts the OSC server to process messages. Data will not be returned/processed unless this has been run
+
+#### `mixer.state(<address>)`
 Returns the current state of the mixer as a dictionary of values
+The address parameter is optional.  If provided then only the data for that address is returned.
 ```
 {
 	'/ch/1/mix_fader': 0.75,
@@ -103,11 +164,11 @@ Returns the current state of the mixer as a dictionary of values
 }
 ```
 
-#### `mixer.reload()`
-Causes the the mixer to be requeried for it's current state. This only updates the modules internal state.  You would then need to call `mixer.state()` to receive the updated state.
+#### async `mixer.stop()`
+Stops the OSC server and the ability to process messages
 
-#### `mixer.subscribe(callback_function)`
-This registered a `callback_function` that is called whenever there is a change at the mixer on one of the monitored properties.
+#### async `mixer.subscribe(callback_function)`
+This registers a `callback_function` that is called whenever there is a change at the mixer on one of the monitored properties.
 The callback function must receive one dictionary parameter that contains the data that has been updated.
 The content of this data paramter is as follows
 
@@ -118,24 +179,11 @@ The content of this data paramter is as follows
 }
 ```
 
-Updates will automatically be stopped when the code passes outside the `with` context.
+#### async `mixer.unsubscribe()`
+Stops the module listening to real time updates
 
-#### `mixer.set_value(address, value)`
-Tells the mixer to update a particular field parameter to the `value` specified.
-`address` should be in the format returned by the `mixer.state()` call.
-`value should be in a format appropriate to the address being used. The module does no checking on the appropriateness of the value.
-This call also updates the internal state of the module.
-
-#### `mixer.load_scene(scene_number)`
-Changes the current/scene snapshot of the mixer.
-`scene_number` is the index
-
-#### `mixer.send(address, value)` (Low Level Call)
-This is a low level call to send an OSC message to the mixer.  As this is a low level call, the address of the OSC message being sent would have to conform to that required by the mixer in its documenation, no changing of the address is performed.  This call does not update the internal state
-
-#### `mixer.query(address)` (Low Level Call)
-This is a low level call and returns the response of a previous `send` call.
-
+#### async `mixer.validate_connection()`
+Returns `True` if the connection to the mixer is successful, `False` otherwise.
 
 
 ## Tests
