@@ -14,7 +14,7 @@ def load_test_mixer_config():
 async def test_mixer():
     config = load_test_mixer_config()
 
-    mixer = mixer_api.connect(config.get("mixer_type"), ip=config.get("ip"))
+    mixer = mixer_api.create(config.get("mixer_type"), ip=config.get("ip"))
     start = time.process_time()
     await mixer.start()
     start = time.process_time()

@@ -41,7 +41,7 @@ def updates_function(data):
     print(f"The property {data.get('property')} has been set to {data.get('value')}")
 
 async def main():
-    mixer  = mixer_api.connect("X32", ip="192.168.201.149", logLevel=logging.WARNING)
+    mixer  = mixer_api.create("X32", ip="192.168.201.149", logLevel=logging.WARNING)
     await mixer.start()
     state = await mixer.reload()
     state = mixer.state()
@@ -60,7 +60,7 @@ The data returned by both the `state` and `subscription` callback function is ba
 Each key is a mixture of a base 'group' key eg `/ch/1/` and a more specific key.  
 They keys have also been altered slightly to maintain a consistent approach between different mixers. eg. For channel/bus numbers the leading zero has been removed. on the XAir mixers the main fader is `/main/lr` whereas on the X32 it is `/main/st`.  This modules returns both as `/main/st`.
 
-#### `mixer_api.connect("<mixer_type>", ip="<ip_address>")`
+#### `mixer_api.create("<mixer_type>", ip="<ip_address>")`
 The code is written to support the following mixer types:
 - `X32`
 - `XR18`
@@ -74,9 +74,10 @@ The following keyword arguments may be passed:
 -   `port`: mixer port, defaults to 10023 for x32 and 10024 for xair
 -   `delay`: a delay between each command, defaults to 20ms.
     -   a note about delay, stability may rely on network connection. For wired connections the delay can be safely reduced.  
--   `logLevel': the level of logging, defaults to warning (enums from logging eg logging.DEBUG)
+-   `logLevel`: the level of logging, defaults to warning (enums from logging eg logging.DEBUG)
 
-On connection, the function requests the current state of the appropriate faders from the mixer.  This results in a number of OSC messages being sent.  If you have problems receiving all this data, then tweaking the delay setting may be appropriate.
+The create function only creates an instance of the mixer, it does not 'connect' to it.
+You should call the `mixer.start()` function to prepare communication and then call `mixer.validate_connection()` to check that the connection to the mixer worked.
 
 #### mixer.info()
 Returns information about the mixer, giving the number of channels/busses etc as well as the base part of the 'address' for that component.
@@ -115,16 +116,16 @@ Returns information about the mixer, giving the number of channels/busses etc as
 
 #### async `mixer.load_scene(scene_number)`
 Changes the current/scene snapshot of the mixer.
-`scene_number` is the index
+`scene_number` is the scene number as stored on the mixer.
 
 #### async `mixer.query(address)` (Low Level Call)
-This is a low level call and returns the response of a previous `send` call.
+This is a low level call and returns the response of a previous `send` call. You should not need to call this, but rely on the managed state instead.
 
 #### async `mixer.reload()`
-Causes the the mixer to be requeried for it's current state. This only updates the modules internal state.  You would then need to call `mixer.state()` to receive the updated state.
+Causes the the mixer to be requeried for it's current state. This only updates the module's internal state.  You would then need to call `mixer.state()` to receive the updated state.
 
 #### async `mixer.send(address, value)` (Low Level Call)
-This is a low level call to send an OSC message to the mixer.  As this is a low level call, the address of the OSC message being sent would have to conform to that required by the mixer in its documenation, no changing of the address is performed.  This call does not update the internal state
+This is a low level call to send an OSC message to the mixer.  As this is a low level call, the address of the OSC message being sent would have to conform to that required by the mixer in its documenation, no changing of the address is performed.  This call does not update the internal state. You should not need to call this, but rely on the managed state instead.
 
 #### async `mixer.set_value(address, value)`
 Tells the mixer to update a particular field parameter to the `value` specified.
@@ -136,8 +137,7 @@ This call also updates the internal state of the module.
 Starts the OSC server to process messages. Data will not be returned/processed unless this has been run
 
 #### `mixer.state(<address>)`
-Returns the current state of the mixer as a dictionary of values
-The address parameter is optional.  If provided then only the data for that address is returned.
+Returns the current state of the mixer. If the optional address parameter is provided then the current state of that address is returned.  If the parameter is not provided then the entire state is returned as a dictionary of values.
 ```
 {
 	'/ch/1/mix_fader': 0.75,
@@ -169,8 +169,8 @@ Stops the OSC server and the ability to process messages
 
 #### async `mixer.subscribe(callback_function)`
 This registers a `callback_function` that is called whenever there is a change at the mixer on one of the monitored properties.
-The callback function must receive one dictionary parameter that contains the data that has been updated.
-The content of this data paramter is as follows
+The callback function will receive one dictionary parameter that contains the data that has been updated.
+The content of this data parameter is as follows
 
 ```python
 { 
