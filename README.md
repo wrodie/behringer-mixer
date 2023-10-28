@@ -40,15 +40,17 @@ def updates_function(data):
     print(f"The property {data.property} has been set to {data.value}")
 
 def main():
-    with mixer_api.connect("X32", ip="192.168.201.149") as mixer:
-        state = mixer.state()
-        print(state)
-        mixer.subscribe(updates_function)
-        mixer.set_value("/ch/1/mix_fader", 0)
+    mixer  = mixer_api.connect("X32", ip="192.168.201.149")
+    mixer.start()
+    state = mixer.state()
+    print(state)
+    mixer.subscribe(updates_function)
+    mixer.set_value("/ch/1/mix_fader", 0)
 
 if __name__ == "__main__":
     main()
 ```
+### mixer.mixer_info()
 
 ### Property Keys
 The data returned by both the `state` and `subscription` callback function is based on a number of property keys for the mixer.  While these keys are 'similar' to the values used in the OSC commands they are not always the same.
