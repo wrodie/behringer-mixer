@@ -80,14 +80,15 @@ class MixerTypeXAir(MixerTypeBase):
     cmd_scene_load = "/-snap/load"
 
     extra_addresses_to_load = [
-        ["/main/lr/fader", "/main/st/mix/fader"],
-        ["/main/lr/mix/on", "/main/st/mix/on"],
-        ["/main/lr/config/name", "/main/st/config/name"],
+        ["/lr/mix/fader", "/main/st/mix/fader"],
+        ["/lr/mix/on", "/main/st/mix/on"],
+        ["/lr/config/name", "/main/st/config/name"],
+        ["/-snap/index", "/scene/current"],
     ]
 
-    def __init__(self, *args):
-        self.addresses_to_load.append(self.extra_addresses_to_load)
-        super().__init__(*args)
+    def __init__(self, **kwargs):
+        self.addresses_to_load += self.extra_addresses_to_load
+        super().__init__(**kwargs)
 
 
 class MixerTypeX32(MixerTypeBase):
