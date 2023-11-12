@@ -66,7 +66,6 @@ The code is written to support the following mixer types:
 - `XR18`
 - `XR16`
 - `XR12`
-(I currently only have access to an X32.)
 
 The following keyword arguments may be passed:
 
