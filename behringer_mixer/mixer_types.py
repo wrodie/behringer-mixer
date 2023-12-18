@@ -18,7 +18,7 @@ class MixerTypeBase(MixerBase):
     num_scenes: int = 100
 
     addresses_to_load = [
-        ["/xinfo", "status"],
+        ["/xinfo", "/status"],
         ["/ch/{num_channel}/mix/fader"],
         ["/ch/{num_channel}/mix/on"],
         ["/ch/{num_channel}/config/name"],
