@@ -12,14 +12,19 @@ class MixerTypeBase(MixerBase):
     num_bus: int = 0
     num_dca: int = 0
     num_fx: int = 0
+    num_auxin: int = 0
     num_auxrtn: int = 0
     num_matrix: int = 0
     num_scenes: int = 100
 
     addresses_to_load = [
+        ["/xinfo", "status"],
         ["/ch/{num_channel}/mix/fader"],
         ["/ch/{num_channel}/mix/on"],
         ["/ch/{num_channel}/config/name"],
+        ["/auxin/{num_channel:2}/mix/fader"],
+        ["/auxin/{num_channel:2}/mix/on"],
+        ["/auxin/{num_channel:2}/config/name"],
         ["/bus/{num_bus}/mix/fader"],
         ["/bus/{num_bus}/mix/on"],
         ["/bus/{num_bus}/config/name"],
@@ -61,6 +66,10 @@ class MixerTypeBase(MixerBase):
                 "number": self.num_fx,
                 "base_address": "fx",
             },
+            "auxin": {
+                "number": self.num_auxin,
+                "base_address": "auxin",
+            },
             "auxrtn": {
                 "number": self.num_auxrtn,
                 "base_address": "auxrtn",
@@ -99,6 +108,7 @@ class MixerTypeX32(MixerTypeBase):
     num_bus: int = 16
     num_dca: int = 8
     num_fx: int = 8
+    num_auxin: int = 8
     num_auxrtn: int = 8
     num_matrix: int = 6
 
