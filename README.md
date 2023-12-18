@@ -6,7 +6,7 @@ Initial inspiration (and some code) comes from https://github.com/onyx-and-iris/
 ## What it does and what it doesn't do.
 This module is a simple interface to a series of Behringer digital mixers.  It does NOT support all parameters or controls.  It is primarily focussed on getting and setting fader information.  It supports getting this information, both on a once off basis and subscribing for real-time updates.
 
-It currently supports the following functionality for all channels/busses/matrices/dcas/main/lr:
+It currently supports the following functionality for all channels/busses/matrices/auxin/dcas/main/lr:
 - Fader Value (float and dB) [get/set]
 - Fader Mute status [get/set]
 - Fader Name [get]
