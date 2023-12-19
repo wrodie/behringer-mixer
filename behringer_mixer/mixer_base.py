@@ -2,6 +2,7 @@
 import re
 import asyncio
 import logging
+import time
 from typing import Optional
 from pythonosc.dispatcher import Dispatcher
 from .errors import MixerError
@@ -22,6 +23,12 @@ class MixerBase:
     addresses_to_load = []
     cmd_scene_load = ""
     tasks = set()
+    _mixer_status = {
+        "ip_address": None,
+        "name": None,
+        "type": None,
+        "firmware": None,
+    }
 
     def __init__(self, **kwargs):
         self.ip = kwargs.get("ip")
@@ -39,6 +46,7 @@ class MixerBase:
         self._rewrites_reverse = {}
         self._valid_addresses = {}
         self.server = None
+        self._last_received = 0
 
     async def validate_connection(self):
         """Validate connection to the mixer"""
@@ -77,7 +85,10 @@ class MixerBase:
         """Handle callback response"""
 
         self.logger.debug(f"received: {addr} {data if data else ''}")
+        self._last_received = time.time()
         updates = self._update_state(addr, data)
+        if addr == "/xinfo":
+            self.handle_xinfo(data)
         if self._callback_function:
             for row in updates:
                 self._callback_function(row)
@@ -109,6 +120,7 @@ class MixerBase:
         while self._callback_function:
             await asyncio.sleep(9)
             await self.send(renew_string)
+            await self.send("/xinfo")
         return True
 
     async def unsubscribe(self):
@@ -264,3 +276,28 @@ class MixerBase:
                         f"{init_string}/" + str(num).zfill(zfill_num) + "/",
                     )
         return address
+
+    def last_received(self):
+        # Return the timestamp of the last time the module received a message from the mixer
+        return self._last_received
+
+    def subscription_connected(self):
+        # Return true if the module has received a message from the mixer in the last 20 seconds
+        return False if (time.time() - self._last_received) > 20 else True
+
+    def name(self):
+        # Return the name of the mixer
+        return self._mixer_status.get("name")
+
+    def firmware(self):
+        # Return the firmware version of the mixer
+        return self._mixer_status.get("firmware")
+
+    def handle_xinfo(self, data):
+        # Handle the return data from xinfo requests
+        self._mixer_status = {
+            "ip_address": data[0],
+            "name": data[1],
+            "type": data[2],
+            "firmware": data[3],
+        }

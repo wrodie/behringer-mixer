@@ -78,7 +78,10 @@ The following keyword arguments may be passed:
 The create function only creates an instance of the mixer, it does not 'connect' to it.
 You should call the `mixer.start()` function to prepare communication and then call `mixer.validate_connection()` to check that the connection to the mixer worked.
 
-#### mixer.info()
+#### `mixer.firmware()`
+Returns the firmware version of the mixer.
+`
+#### `mixer.info()`
 Returns information about the mixer, giving the number of channels/busses etc as well as the base part of the 'address' for that component.
 ```
         {
@@ -113,9 +116,15 @@ Returns information about the mixer, giving the number of channels/busses etc as
         }
 ```
 
+#### `mixer.last_received()`
+Returns a unix timestamp giving the last time data was received from the mixer.
+
 #### async `mixer.load_scene(scene_number)`
 Changes the current/scene snapshot of the mixer.
 `scene_number` is the scene number as stored on the mixer.
+
+#### `mixer.name()`
+Returns the network name of the mixer.
 
 #### async `mixer.query(address)` (Low Level Call)
 This is a low level call and returns the response of a previous `send` call. You should not need to call this, but rely on the managed state instead.
@@ -177,6 +186,9 @@ The content of this data parameter is as follows
     'value': 0.85
 }
 ```
+
+#### async `mixer.subscription_connected()`
+Returns true if the module has received data from the mixer in the last 20 seconds. 
 
 #### async `mixer.unsubscribe()`
 Stops the module listening to real time updates
