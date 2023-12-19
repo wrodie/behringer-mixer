@@ -186,6 +186,8 @@ class MixerBase:
             address = rewrite_key
         state_key = self._generate_state_key(address)
         value = values[0]
+        if len(values) > 1:
+            value = values
         updates = []
         if state_key:
             if state_key.endswith("_on") or state_key.endswith("/on"):
@@ -204,6 +206,7 @@ class MixerBase:
         # generate a key for use by state from the address
         prefixes = [
             r"^/ch/\d+/",
+            r"^/auxin/\d+/",
             r"^/bus/\d+/",
             r"^/dca/\d+/",
             r"^/mtx/\d+/",
