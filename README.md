@@ -188,7 +188,10 @@ The content of this data parameter is as follows
 ```
 
 #### async `mixer.subscription_connected()`
-Returns true if the module has received data from the mixer in the last 20 seconds. 
+Returns true if the module has received data from the mixer in the last 15 seconds. 
+
+#### async `mixer.subscription_status_register(callback_function)`
+Register a function to be called when the subscription status changes.  This function is called when `subscription_connected()` changes.
 
 #### async `mixer.unsubscribe()`
 Stops the module listening to real time updates

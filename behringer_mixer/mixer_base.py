@@ -47,6 +47,8 @@ class MixerBase:
         self._valid_addresses = {}
         self.server = None
         self._last_received = 0
+        self._subscription_status_callback = None
+        self._subscription_status_connection = False
 
     async def validate_connection(self):
         """Validate connection to the mixer"""
@@ -121,6 +123,18 @@ class MixerBase:
             await asyncio.sleep(9)
             await self.send(renew_string)
             await self.send("/xinfo")
+            if self.subscription_connected() != self._subscription_status_connection:
+                self._subscription_status_connection = (
+                    True if self.subscription_connected() else False
+                )
+                if self._subscription_status_connection:
+                    # Coming back from loss of connection, need to reload state
+                    await self.reload()
+                if self._subscription_status_callback:
+                    self._subscription_status_callback(
+                        self._subscription_status_connection
+                    )
+
         return True
 
     async def unsubscribe(self):
@@ -282,8 +296,13 @@ class MixerBase:
         return self._last_received
 
     def subscription_connected(self):
-        # Return true if the module has received a message from the mixer in the last 20 seconds
-        return False if (time.time() - self._last_received) > 20 else True
+        # Return true if the module has received a message from the mixer in the last 15 seconds
+        return False if (time.time() - self._last_received) > 15 else True
+
+    async def subscription_status_register(self, callback_function):
+        # register a callback function that is called each time the status of the subscription changes
+        self._subscription_status_callback = callback_function
+        return True
 
     def name(self):
         # Return the name of the mixer
