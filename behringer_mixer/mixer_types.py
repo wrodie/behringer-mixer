@@ -110,6 +110,7 @@ class MixerTypeX32(MixerTypeBase):
     num_fx: int = 8
     num_auxin: int = 8
     num_auxrtn: int = 8
+    num_auxin: int = 8
     num_matrix: int = 6
 
 
