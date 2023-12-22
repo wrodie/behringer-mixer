@@ -91,6 +91,7 @@ class MixerBase:
         updates = self._update_state(addr, data)
         if addr == "/xinfo":
             self.handle_xinfo(data)
+            updates = []
         if self._callback_function:
             for row in updates:
                 self._callback_function(row)
