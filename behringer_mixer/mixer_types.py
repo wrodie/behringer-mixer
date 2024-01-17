@@ -36,6 +36,14 @@ class MixerTypeBase(MixerBase):
         ["/bus/{num_bus}/mix/fader"],
         ["/bus/{num_bus}/mix/on"],
         ["/bus/{num_bus}/config/name"],
+        [
+            "/bus/{num_bus}/mix/{num_matrix:2}/on",
+            "/bussend/{num_bus}/{num_matrix:2}/mix/on",
+        ],
+        [
+            "/bus/{num_bus}/mix/{num_matrix:2}/level",
+            "/bussend/{num_bus}/{num_matrix:2}/mix/fader",
+        ],
         ["/mtx/{num_matrix:2}/mix/fader"],
         ["/mtx/{num_matrix:2}/mix/on"],
         ["/mtx/{num_matrix:2}/config/name"],
@@ -86,6 +94,14 @@ class MixerTypeBase(MixerBase):
                 "number": self.num_scenes,
                 "base_address": "scene",
             },
+            "channel_sends": {
+                "number": 0,
+                "base_address": "chsend",
+            },
+            "bus_sends": {
+                "number": 0,
+                "base_address": "bussend",
+            },
         }
 
 
@@ -101,6 +117,10 @@ class MixerTypeXAir(MixerTypeBase):
         ["/lr/mix/on", "/main/st/mix/on"],
         ["/lr/config/name", "/main/st/config/name"],
         ["/-snap/index", "/scene/current"],
+        [
+            "/ch/{num_channel}/mix/{num_bus}/grpon",
+            "/chsend/{num_channel}/{num_bus}/mix/on",
+        ],
     ]
 
     def __init__(self, **kwargs):
