@@ -19,7 +19,7 @@ class MixerBase:
 
     _info_response = []
     port_number: int = 10023
-    delay: float = 0.02
+    #delay: float = 0.000
     addresses_to_load = []
     cmd_scene_load = ""
     tasks = set()
@@ -33,7 +33,7 @@ class MixerBase:
     def __init__(self, **kwargs):
         self.ip = kwargs.get("ip")
         self.port = kwargs.get("port") or self.port_number
-        self._delay = kwargs.get("delay") or self.delay
+        self._delay = kwargs.get("delay", 0) if "delay" in kwargs else self.delay
         self.logger.addHandler(logging.StreamHandler())
         self.logger.setLevel(kwargs.get("logLevel") or logging.WARNING)
         if not self.ip:
@@ -42,8 +42,8 @@ class MixerBase:
         self._callback_function = None
         self.subscription = None
         self._state = {}
-        self._rewrites = {}
-        self._rewrites_reverse = {}
+        self._mappings = {}
+        self._mappings_reverse = {}
         self._valid_addresses = {}
         self.server = None
         self._last_received = 0
@@ -58,7 +58,7 @@ class MixerBase:
             self.logger.debug(
                 "Failed to setup OSC connection to mixer. Please check for correct ip address."
             )
-            return False
+
         self.logger.debug(
             "Successfully connected to %s at %s.",
             {self.info_response[2]},
@@ -174,32 +174,56 @@ class MixerBase:
         """Load initial state"""
         expanded_addresses = []
         for address_row in self.addresses_to_load:
-            address = address_row[0]
-            rewrite_address = address_row[1] if len(address_row) > 1 else None
+            (new_expanded_address_list, new_mappings) = self._expand_address(
+                address_row
+            )
+            expanded_addresses = expanded_addresses + new_expanded_address_list
+            self._mappings.update(new_mappings)
+
+        for address in expanded_addresses:
+            self._valid_addresses[address] = True
+            await self.send(address)
+
+    def _expand_address(self, address_tuple):
+        # Expand an address including wildcards
+        expanded_addresses = []
+        mappings = {}
+        processlist = [address_tuple]
+        while processlist:
+            row = processlist.pop(-1)
+            address = row[0]
+            rewrite_address = row[1] if len(row) > 1 else None
             matches = re.search(r"\{(.*?)(:(\d)){0,1}\}", address)
             if matches:
                 match_var = matches.group(1)
                 max_count = getattr(self, match_var)
                 zfill_num = int(matches.group(3) or 0) or len(str(max_count))
                 for number in range(1, max_count + 1):
+                    new_rewrite_address = ""
+                    mapping_address = address
                     new_address = address.replace(
                         "{" + match_var + str(matches.group(2) or "") + "}",
                         str(number).zfill(zfill_num),
                     )
-                    expanded_addresses.append(new_address)
+                    mapping_address = mapping_address.replace(
+                        "{" + match_var + str(matches.group(2) or "") + "}", str(number)
+                    )
                     if rewrite_address:
-                        new_rewrite_address = rewrite_address.replace(
+                        mapping_address = rewrite_address.replace(
                             "{" + match_var + str(matches.group(2) or "") + "}",
-                            str(number).zfill(zfill_num),
+                            str(number),
                         )
-                        self._rewrites[new_address] = new_rewrite_address
+                        # str(number).zfill(zfill_num),
+                    processlist.append([new_address, mapping_address])
             else:
                 expanded_addresses.append(address)
-                if rewrite_address:
-                    self._rewrites[address] = rewrite_address
-        for address in expanded_addresses:
-            self._valid_addresses[address] = True
-            await self.send(address)
+                mapping_address = rewrite_address if rewrite_address else address
+                mapping_address = re.sub(
+                    r"(\d+/[^\d]+)(/)([^\d]+)$", "\g<1>_\g<3>", mapping_address
+                )
+                if mapping_address != address:
+                    mappings[address] = mapping_address
+        return (expanded_addresses, mappings)
 
     def _update_state(self, address, values):
         # update internal state representation
@@ -208,10 +232,7 @@ class MixerBase:
         #    /ch/2/config_name = Value
         if not address in self._valid_addresses:
             return []
-        rewrite_key = self._rewrites.get(address)
-        if rewrite_key:
-            address = rewrite_key
-        state_key = self._generate_state_key(address)
+        state_key = self._mappings.get(address) or address
         value = values[0]
         if len(values) > 1:
             value = values
@@ -228,30 +249,10 @@ class MixerBase:
                 updates.append({"property": state_key + "_db", "value": db_val})
         return updates
 
-    @staticmethod
-    def _generate_state_key(address):
-        # generate a key for use by state from the address
-        prefixes = [
-            r"^/ch/\d+/",
-            r"^/auxin/\d+/",
-            r"^/bus/\d+/",
-            r"^/dca/\d+/",
-            r"^/mtx/\d+/",
-            r"^/main/[a-z]+/",
-        ]
-        for prefix in prefixes:
-            match = re.match(prefix, address)
-            if match:
-                key_prefix = address[: match.span()[1]]
-                key_string = address[match.span()[1] :]
-                key_string = key_string.replace("/", "_")
-                return key_prefix + key_string
-        return address
-
-    def _build_reverse_rewrite(self):
-        # Invert the mapping for self._rewrites
-        if not self._rewrites_reverse:
-            self._rewrites_reverse = {v: k for k, v in self._rewrites.items()}
+    def _build_reverse_mappings(self):
+        # Invert the mapping for self._mappings
+        if not self._mappings_reverse:
+            self._mappings_reverse = {v: k for k, v in self._mappings.items()}
 
     async def set_value(self, address, value):
         """Set the value in the mixer"""
@@ -262,15 +263,10 @@ class MixerBase:
             value = 0
         if value is True:
             value = 1
-        address = address.replace("_", "/")
-        address = self._redo_padding(address)
-        self._build_reverse_rewrite()
-        rewrite_key = self._rewrites_reverse.get(address)
-        if rewrite_key:
-            address = rewrite_key
-        await self.send(address, value)
-        await self.query(address)
-        # self._update_state(address, [value])
+        self._build_reverse_mappings()
+        true_address = self._mappings_reverse.get(address) or address
+        await self.send(true_address, value)
+        await self.query(true_address)
 
     def _redo_padding(self, address):
         # Go through address and see if it matches with one of the known address
