@@ -7,7 +7,7 @@ class MixerTypeBase(MixerBase):
 
     mixer_type: str = ""
     port_number: int = 10023
-    delay: float = 0.02
+    delay: float = 0.002
     num_channel: int = 0
     num_bus: int = 0
     num_dca: int = 0
@@ -22,12 +22,28 @@ class MixerTypeBase(MixerBase):
         ["/ch/{num_channel}/mix/fader"],
         ["/ch/{num_channel}/mix/on"],
         ["/ch/{num_channel}/config/name"],
-        ["/auxin/{num_channel:2}/mix/fader"],
-        ["/auxin/{num_channel:2}/mix/on"],
-        ["/auxin/{num_channel:2}/config/name"],
+        [
+            "/ch/{num_channel}/mix/{num_bus}/on",
+            "/chsend/{num_channel}/{num_bus}/mix/on",
+        ],
+        [
+            "/ch/{num_channel}/mix/{num_bus}/level",
+            "/chsend/{num_channel}/{num_bus}/mix/fader",
+        ],
+        ["/auxin/{num_auxin:2}/mix/fader"],
+        ["/auxin/{num_auxin:2}/mix/on"],
+        ["/auxin/{num_auxin:2}/config/name"],
         ["/bus/{num_bus}/mix/fader"],
         ["/bus/{num_bus}/mix/on"],
         ["/bus/{num_bus}/config/name"],
+        [
+            "/bus/{num_bus}/mix/{num_matrix:2}/on",
+            "/bussend/{num_bus}/{num_matrix:2}/mix/on",
+        ],
+        [
+            "/bus/{num_bus}/mix/{num_matrix:2}/level",
+            "/bussend/{num_bus}/{num_matrix:2}/mix/fader",
+        ],
         ["/mtx/{num_matrix:2}/mix/fader"],
         ["/mtx/{num_matrix:2}/mix/on"],
         ["/mtx/{num_matrix:2}/config/name"],
@@ -78,6 +94,14 @@ class MixerTypeBase(MixerBase):
                 "number": self.num_scenes,
                 "base_address": "scene",
             },
+            "channel_sends": {
+                "number": 0,
+                "base_address": "chsend",
+            },
+            "bus_sends": {
+                "number": 0,
+                "base_address": "bussend",
+            },
         }
 
 
@@ -93,6 +117,10 @@ class MixerTypeXAir(MixerTypeBase):
         ["/lr/mix/on", "/main/st/mix/on"],
         ["/lr/config/name", "/main/st/config/name"],
         ["/-snap/index", "/scene/current"],
+        [
+            "/ch/{num_channel}/mix/{num_bus}/grpon",
+            "/chsend/{num_channel}/{num_bus}/mix/on",
+        ],
     ]
 
     def __init__(self, **kwargs):
@@ -110,7 +138,6 @@ class MixerTypeX32(MixerTypeBase):
     num_fx: int = 8
     num_auxin: int = 8
     num_auxrtn: int = 8
-    num_auxin: int = 8
     num_matrix: int = 6
 
 
