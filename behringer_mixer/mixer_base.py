@@ -58,6 +58,7 @@ class MixerBase:
             self.logger.debug(
                 "Failed to setup OSC connection to mixer. Please check for correct ip address."
             )
+            return False
 
         self.logger.debug(
             "Successfully connected to %s at %s.",
