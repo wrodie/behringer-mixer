@@ -55,6 +55,9 @@ class MixerTypeBase(MixerBase):
         ["/main/st/config/name"],
         ["/-show/showfile/show/name", "/show/name"],
         ["/-show/prepos/current", "/scene/current"],
+        ["/-stat/tape/state", "/usb/state", {0: "STOP", 1: "PAUSE", 2: "PLAY", 3: "PAUSE_RECORD", 4: "RECORD", 5: "FAST_FORWARD", 6: "REWIND"}],
+        ["/-stat/tape/file", "/usb/file"],
+        ["/-stat/usbmounted", "/usb/mounted"],
     ]
 
     cmd_scene_load = "/-action/goscene"

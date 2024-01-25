@@ -14,6 +14,9 @@ It currently supports the following functionality for all channels/busses/matric
 It also supports
 - Current scene/snapshot [get]
 - Change scene/snapshot [set]
+- Control USB Player/Recorder [get/set]
+- Current USB Filename [get]
+- Firmware version
 
 If you want a module that allows you to control the full functionality of the mixer, eg configuring effects/eq etc then I would recommend checking out https://github.com/onyx-and-iris/xair-api-python instead.
 

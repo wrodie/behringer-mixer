@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "behringer_mixer"
-version = "0.4.2"
+version = "0.4.3"
 description = "Module to get basic information from Behringer digital mixers eg X32/XAir etc."
 authors = ["wrodie <warren@rodie.net>"]
 license = "MIT"

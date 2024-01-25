@@ -43,6 +43,7 @@ class MixerBase:
         self.subscription = None
         self._state = {}
         self._mappings = {}
+        self._data_mappings = {}
         self._mappings_reverse = {}
         self._valid_addresses = {}
         self.server = None
@@ -121,6 +122,7 @@ class MixerBase:
         renew_string = "/renew"
         if parameter_string == "/xremote":
             renew_string = "/xremote"
+        self._subscription_status_connection = True
         while self._callback_function:
             await asyncio.sleep(9)
             await self.send(renew_string)
@@ -194,6 +196,7 @@ class MixerBase:
             row = processlist.pop(-1)
             address = row[0]
             rewrite_address = row[1] if len(row) > 1 else None
+            data_mapping = row[2] if len(row) > 2 else None
             matches = re.search(r"\{(.*?)(:(\d)){0,1}\}", address)
             if matches:
                 match_var = matches.group(1)
@@ -215,13 +218,15 @@ class MixerBase:
                             str(number),
                         )
                         # str(number).zfill(zfill_num),
-                    processlist.append([new_address, mapping_address])
+                    processlist.append([new_address, mapping_address, data_mapping])
             else:
                 expanded_addresses.append(address)
                 mapping_address = rewrite_address if rewrite_address else address
                 mapping_address = re.sub(
                     r"(\d+/[^\d]+)(/)([^\d]+)$", "\g<1>_\g<3>", mapping_address
                 )
+                if data_mapping:
+                    self._data_mappings[address] = data_mapping
                 if mapping_address != address:
                     mappings[address] = mapping_address
         return (expanded_addresses, mappings)
@@ -239,6 +244,8 @@ class MixerBase:
             value = values
         updates = []
         if state_key:
+            if self._data_mappings.get(address):
+                value = self._data_mappings[address].get(value)
             if state_key.endswith("_on") or state_key.endswith("/on"):
                 value = bool(value)
             state_key = re.sub(r"/0+(\d+)/", r"/\1/", state_key)
@@ -266,6 +273,9 @@ class MixerBase:
             value = 1
         self._build_reverse_mappings()
         true_address = self._mappings_reverse.get(address) or address
+        if self._data_mappings.get(true_address):
+            reverse_map = {v: k for k, v in self._data_mappings[true_address].items()}
+            value = reverse_map.get(value)
         await self.send(true_address, value)
         await self.query(true_address)
 
