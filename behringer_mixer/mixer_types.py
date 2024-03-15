@@ -23,12 +23,12 @@ class MixerTypeBase(MixerBase):
         ["/ch/{num_channel}/mix/on"],
         ["/ch/{num_channel}/config/name"],
         [
-            "/ch/{num_channel}/mix/{num_bus}/on",
-            "/chsend/{num_channel}/{num_bus}/mix/on",
+            "/ch/{num_channel}/mix/{num_bus:2}/on",
+            "/chsend/{num_channel}/{num_bus:2}/mix/on",
         ],
         [
-            "/ch/{num_channel}/mix/{num_bus}/level",
-            "/chsend/{num_channel}/{num_bus}/mix/fader",
+            "/ch/{num_channel}/mix/{num_bus:2}/level",
+            "/chsend/{num_channel}/{num_bus:2}/mix/fader",
         ],
         ["/auxin/{num_auxin:2}/mix/fader"],
         ["/auxin/{num_auxin:2}/mix/on"],
@@ -121,8 +121,8 @@ class MixerTypeXAir(MixerTypeBase):
         ["/lr/config/name", "/main/st/config/name"],
         ["/-snap/index", "/scene/current"],
         [
-            "/ch/{num_channel}/mix/{num_bus}/grpon",
-            "/chsend/{num_channel}/{num_bus}/mix/on",
+            "/ch/{num_channel}/mix/{num_bus:2}/grpon",
+            "/chsend/{num_channel}/{num_bus:2}/mix/on",
         ],
     ]
 
