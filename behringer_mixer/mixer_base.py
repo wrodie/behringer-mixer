@@ -223,7 +223,7 @@ class MixerBase:
                 expanded_addresses.append(address)
                 mapping_address = rewrite_address if rewrite_address else address
                 mapping_address = re.sub(
-                    r"(\d+/[^\d]+)(/)([^\d]+)$", "\g<1>_\g<3>", mapping_address
+                    r"((?:st|\d+)/[^\d]+)(/)([^\d]+)$", r"\g<1>_\g<3>", mapping_address
                 )
                 if data_mapping:
                     self._data_mappings[address] = data_mapping
