@@ -255,6 +255,10 @@ class MixerBase:
                 db_val = fader_to_db(value)
                 self._state[state_key + "_db"] = db_val
                 updates.append({"property": state_key + "_db", "value": db_val})
+            elif state_key.endswith("_color"):
+                color_name = color_index_to_name(value)
+                self._state[state_key + "_name"] = color_name
+                updates.append({"property": state_key + "_name", "value": color_name})
         return updates
 
     def _build_reverse_mappings(self):
@@ -267,6 +271,9 @@ class MixerBase:
         if address.endswith("_db"):
             address = address.replace("_db", "")
             value = db_to_fader(value)
+        elif address.endswith("_color_name"):
+            address = address.replace("_name", "")
+            value = color_name_to_index(value)
         if value is False:
             value = 0
         if value is True:

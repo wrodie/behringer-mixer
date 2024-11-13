@@ -25,3 +25,14 @@ def db_to_fader(val):
     elif val >= -90:
         return (val + 90) / 480
     return 0
+
+
+_colors = ["OFF", "RD", "GN", "YE", "BL", "MG", "CY", "WH", "OFFi", "RDi", "GNi", "YEi", "BLi", "MGi", "CYi", "WHi"]
+
+
+def color_name_to_index(color_name: str) -> int:
+    return _colors.index(color_name)
+
+
+def color_index_to_name(color_index: int) -> str:
+    return _colors[color_index]
