@@ -6,8 +6,9 @@ Initial inspiration (and some code) comes from https://github.com/onyx-and-iris/
 ## What it does and what it doesn't do.
 This module is a simple interface to a series of Behringer digital mixers.  It does NOT support all parameters or controls.  It is primarily focussed on getting and setting fader information.  It supports getting this information, both on a once off basis and subscribing for real-time updates.
 
-It currently supports the following functionality for all channels/busses/matrices/auxin/dcas/main/lr:
+It currently supports the following functionality for all channels/busses/matrices/auxin/dcas/main/lr/mono:
 - Fader Value (float and dB) [get/set]
+- Fader Color (index 0-15 and color name) [get/set]
 - Fader Mute status [get/set]
 - Fader Name [get]
 
@@ -157,6 +158,8 @@ Returns the current state of the mixer. If the optional address parameter is pro
 	'/ch/1/mix_on': False,
 	'/ch/2/mix_on': False,
 	'/ch/1/config_name': 'VOX 1',
+	'/ch/1/config_color': 4,
+	'/ch/1/config_color_name': 'BL',
 	...
 	'/bus/1/mix_fader': 0.37829911708831787,
 	'/bus/1/mix_fader_db': -19.7,
@@ -166,6 +169,8 @@ Returns the current state of the mixer. If the optional address parameter is pro
 	'/bus/2/config_name': '',
 	...
 	'/dca/3/config_name': 'Drums',
+	'/dca/3/config_color': 10,
+	'/dca/3/config_color_name': 'GNi',
 	...
 	'/main/st/mix_fader': 0.7497556209564209,
 	'/main/st/mix_fader_db': -0.0,
