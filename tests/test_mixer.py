@@ -26,8 +26,8 @@ async def test_mixer():
     await fader_sub_test(mixer, "dca", mixer.num_dca)
     await fader_sub_test(mixer, "auxin", mixer.num_auxin)
 
-    await mixer.load_scene(6)
-    assert mixer.state("/scene/current") == 6
+    await mixer.load_scene(1)
+    assert mixer.state("/scene/current") == 1
     await mixer.stop()
 
 

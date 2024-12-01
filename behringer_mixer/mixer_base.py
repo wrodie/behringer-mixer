@@ -6,7 +6,7 @@ import time
 from typing import Optional
 from pythonosc.dispatcher import Dispatcher
 from .errors import MixerError
-from .utils import fader_to_db, db_to_fader
+from .utils import fader_to_db, db_to_fader, color_index_to_name, color_name_to_index
 from .mixer_osc import OSCClientServer
 
 
