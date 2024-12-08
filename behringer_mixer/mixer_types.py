@@ -16,6 +16,7 @@ class MixerTypeBase(MixerBase):
     num_auxrtn: int = 0
     num_matrix: int = 0
     num_scenes: int = 100
+    has_mono: bool = False
 
     addresses_to_load = [
         ["/xinfo", "/status"],
@@ -115,6 +116,7 @@ class MixerTypeBase(MixerBase):
                 "number": 0,
                 "base_address": "bussend",
             },
+            "has_mono": self.has_mono,
         }
 
 
@@ -152,6 +154,7 @@ class MixerTypeX32(MixerTypeBase):
     num_auxin: int = 8
     num_auxrtn: int = 8
     num_matrix: int = 6
+    has_mono: bool = True
 
 
 class MixerTypeXR12(MixerTypeXAir):
