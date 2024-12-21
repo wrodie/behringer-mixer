@@ -176,7 +176,7 @@ class MixerTypeX32(MixerTypeBase):
     num_auxrtn: int = 8
     num_matrix: int = 6
     has_mono: bool = True
-    num_head_amp: int = 7
+    num_head_amp: int = 128
 
 class MixerTypeXR12(MixerTypeXAir):
     """Class for Behringer XR-12 Mixer"""
