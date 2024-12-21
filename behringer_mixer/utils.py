@@ -26,7 +26,6 @@ def db_to_fader(val):
         return (val + 90) / 480
     return 0
 
-
 _colors = ["OFF", "RD", "GN", "YE", "BL", "MG", "CY", "WH", "OFFi", "RDi", "GNi", "YEi", "BLi", "MGi", "CYi", "WHi"]
 
 

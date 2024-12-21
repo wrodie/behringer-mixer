@@ -16,6 +16,7 @@ class MixerTypeBase(MixerBase):
     num_auxrtn: int = 0
     num_matrix: int = 0
     num_scenes: int = 100
+    num_head_amp: int = 0
     has_mono: bool = False
 
     addresses_to_load = [
@@ -56,6 +57,14 @@ class MixerTypeBase(MixerBase):
         ["/dca/{num_dca}/on", "/dca/{num_dca}/mix/on"],
         ["/dca/{num_dca}/config/name"],
         ["/dca/{num_dca}/config/color"],
+        [
+            "/headamp/{num_head_amp:3,0}/gain",
+            "/headamp/{num_head_amp:3,0}/gain",
+        ],
+        [
+            "/headamp/{num_head_amp:3,0}/phantom",
+            "/headamp/{num_head_amp:3,0}/phantom",
+        ],
         ["/main/st/mix/fader"],
         ["/main/st/mix/on"],
         ["/main/st/config/name"],
@@ -116,6 +125,10 @@ class MixerTypeBase(MixerBase):
                 "number": 0,
                 "base_address": "bussend",
             },
+            "head_amps": {
+                "number": self.num_head_amp,
+                "base_address": "headamp",
+            },
             "has_mono": self.has_mono,
         }
 
@@ -136,6 +149,14 @@ class MixerTypeXAir(MixerTypeBase):
             "/ch/{num_channel}/mix/{num_bus:2}/grpon",
             "/chsend/{num_channel}/{num_bus:2}/mix/on",
         ],
+        [
+            "/headamp/{num_head_amp:2,1}/gain",
+            "/headamp/{num_head_amp:3,1}/gain"
+        ],
+        [
+            "/headamp/{num_head_amp:2,1}/phantom",
+            "/headamp/{num_head_amp:3,1}/phantom"
+        ],
     ]
 
     def __init__(self, **kwargs):
@@ -155,7 +176,7 @@ class MixerTypeX32(MixerTypeBase):
     num_auxrtn: int = 8
     num_matrix: int = 6
     has_mono: bool = True
-
+    num_head_amp: int = 7
 
 class MixerTypeXR12(MixerTypeXAir):
     """Class for Behringer XR-12 Mixer"""
@@ -165,6 +186,7 @@ class MixerTypeXR12(MixerTypeXAir):
     num_bus: int = 2
     num_dca: int = 4
     num_fx: int = 4
+    num_head_amp: int = 4
 
 
 class MixerTypeXR16(MixerTypeXAir):
@@ -175,6 +197,7 @@ class MixerTypeXR16(MixerTypeXAir):
     num_bus: int = 4
     num_dca: int = 4
     num_fx: int = 4
+    num_head_amp: int = 8
 
 
 class MixerTypeXR18(MixerTypeXAir):
@@ -186,6 +209,7 @@ class MixerTypeXR18(MixerTypeXAir):
     num_dca: int = 4
     num_fx: int = 4
     num_auxrtn: int = 2
+    num_head_amp: int = 16
 
 
 _supported_mixers = [

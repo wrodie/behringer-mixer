@@ -197,27 +197,30 @@ class MixerBase:
             address = row[0]
             rewrite_address = row[1] if len(row) > 1 else None
             data_mapping = row[2] if len(row) > 2 else None
-            matches = re.search(r"\{(.*?)(:(\d)){0,1}\}", address)
+            matches = re.search(r"\{(.*?)(:(\d)){0,1}(,(\d)){0,1}\}", address)
             if matches:
                 match_var = matches.group(1)
                 max_count = getattr(self, match_var)
                 zfill_num = int(matches.group(3) or 0) or len(str(max_count))
-                for number in range(1, max_count + 1):
+                start_index = 1
+                if matches.group(5) is not None:
+                    start_index = int(matches.group(5))
+                for number in range(start_index, max_count + 1):
                     new_rewrite_address = ""
                     mapping_address = address
                     new_address = address.replace(
-                        "{" + match_var + str(matches.group(2) or "") + "}",
+                        "{" + match_var + str(matches.group(2) or "") + str(matches.group(4) or "") + "}",
                         str(number).zfill(zfill_num),
                     )
+                    output_number = number if start_index > 0 else number + 1
                     mapping_address = mapping_address.replace(
-                        "{" + match_var + str(matches.group(2) or "") + "}", str(number)
+                        "{" + match_var + str(matches.group(2) or "") + str(matches.group(4) or "") + "}", str(output_number)
                     )
                     if rewrite_address:
                         mapping_address = rewrite_address.replace(
-                            "{" + match_var + str(matches.group(2) or "") + "}",
-                            str(number),
+                            "{" + match_var + str(matches.group(2) or "") + str(matches.group(4) or "") + "}",
+                            str(output_number),
                         )
-                        # str(number).zfill(zfill_num),
                     processlist.append([new_address, mapping_address, data_mapping])
             else:
                 expanded_addresses.append(address)
