@@ -18,6 +18,7 @@ It also supports
 - Control USB Player/Recorder [get/set]
 - Current USB Filename [get]
 - Firmware version
+- Control of head-amps gain/phantom power
 
 If you want a module that allows you to control the full functionality of the mixer, eg configuring effects/eq etc then I would recommend checking out https://github.com/onyx-and-iris/xair-api-python instead.
 
