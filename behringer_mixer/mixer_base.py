@@ -117,6 +117,7 @@ class MixerBase:
         await self._subscribe_worker("/xremote", callback_function)
 
     async def _subscribe_worker(self, parameter_string, callback_function):
+        """Worker to handle subscription and renewal of OSC messages."""
         self._callback_function = callback_function
         await self.send(parameter_string)
         renew_string = "/renew"

@@ -19,66 +19,328 @@ class MixerTypeBase(MixerBase):
     num_head_amp: int = 0
     has_mono: bool = False
 
+    # input_padding - use automatic if not specified
+    # output_padding - use 0 if not specified
+
     addresses_to_load = [
-        ["/xinfo", "/status"],
-        ["/ch/{num_channel}/mix/fader"],
-        ["/ch/{num_channel}/mix/on"],
-        ["/ch/{num_channel}/config/name"],
-        ["/ch/{num_channel}/config/color"],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/on",
-            "/chsend/{num_channel}/{num_bus:2}/mix/on",
-        ],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/level",
-            "/chsend/{num_channel}/{num_bus:2}/mix/fader",
-        ],
-        ["/auxin/{num_auxin:2}/mix/fader"],
-        ["/auxin/{num_auxin:2}/mix/on"],
-        ["/auxin/{num_auxin:2}/config/name"],
-        ["/auxin/{num_auxin:2}/config/color"],
-        ["/bus/{num_bus}/mix/fader"],
-        ["/bus/{num_bus}/mix/on"],
-        ["/bus/{num_bus}/config/name"],
-        ["/bus/{num_bus}/config/color"],
-        [
-            "/bus/{num_bus}/mix/{num_matrix:2}/on",
-            "/bussend/{num_bus}/{num_matrix:2}/mix/on",
-        ],
-        [
-            "/bus/{num_bus}/mix/{num_matrix:2}/level",
-            "/bussend/{num_bus}/{num_matrix:2}/mix/fader",
-        ],
-        ["/mtx/{num_matrix:2}/mix/fader"],
-        ["/mtx/{num_matrix:2}/mix/on"],
-        ["/mtx/{num_matrix:2}/config/name"],
-        ["/mtx/{num_matrix:2}/config/color"],
-        ["/dca/{num_dca}/fader", "/dca/{num_dca}/mix/fader"],
-        ["/dca/{num_dca}/on", "/dca/{num_dca}/mix/on"],
-        ["/dca/{num_dca}/config/name"],
-        ["/dca/{num_dca}/config/color"],
-        [
-            "/headamp/{num_head_amp:3,0}/gain",
-            "/headamp/{num_head_amp:3,0}/gain",
-        ],
-        [
-            "/headamp/{num_head_amp:3,0}/phantom",
-            "/headamp/{num_head_amp:3,0}/phantom",
-        ],
-        ["/main/st/mix/fader"],
-        ["/main/st/mix/on"],
-        ["/main/st/config/name"],
-        ["/main/st/config/color"],
-        ["/main/m/mix/fader"],
-        ["/main/m/mix/on"],
-        ["/main/m/config/name"],
-        ["/main/m/config/color"],
-        ["/-show/showfile/show/name", "/show/name"],
-        ["/-show/prepos/current", "/scene/current"],
-        ["/-stat/tape/state", "/usb/state", {0: "STOP", 1: "PAUSE", 2: "PLAY", 3: "PAUSE_RECORD", 4: "RECORD", 5: "FAST_FORWARD", 6: "REWIND"}],
-        ["/-stat/tape/file", "/usb/file"],
-        ["/-stat/usbmounted", "/usb/mounted"],
+        {
+            "input": "/xinfo",
+            "output": "/status",
+        },
+        # Channels
+        {
+            "input": "/ch/{num_channel}/mix/fader",
+            "output": "/ch/{num_channel}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/ch/{num_channel}/mix/on",
+            "output": "/ch/{num_channel}/mix_on",
+        },
+        {
+            "input": "/ch/{num_channel}/config/name",
+            "output": "/ch/{num_channel}/config_name",
+        },
+        {
+            "input": "/ch/{num_channel}/config/color",
+            "output": "/ch/{num_channel}/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+        # Channel Sends
+        {
+            "input": "/ch/{num_channel}/mix/{num_bus}/on",
+            "input_padding":    {
+                "num_bus": 2,
+            },
+           "output_padding":    {
+                "num_bus": 2,
+            },
+            "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+        },
+        {
+            "input": "/ch/{num_channel}/mix/{num_bus}/fader",
+            "input_padding":    {
+                "num_bus": 2,
+            },
+           "output_padding":    {
+                "num_bus": 2,
+            },
+            "output": "/chsend/{num_channel}/{num_bus}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        # Auxins
+        {
+            "input": "/auxin/{num_auxin}/mix/fader",
+            "input_padding": { "num_auxin": 2 },
+            "output": "/auxin/{num_auxin}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/auxin/{num_auxin}/mix/on",
+            "input_padding": { "num_auxin": 2 },
+            "output": "/auxin/{num_auxin}/mix_on",
+        },
+        {
+            "input": "/auxin/{num_auxin}/config/name",
+            "input_padding": { "num_auxin": 2 },
+            "output": "/auxin/{num_auxin}/config_name",
+        },
+        {
+            "input": "/auxin/{num_auxin}/config/color",
+            "input_padding": { "num_auxin": 2 },
+            "output": "/auxin/{num_auxin}/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+        # Busses
+        {
+            "input": "/bus/{num_bus}/mix/fader",
+            "output": "/bus/{num_bus}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/bus/{num_bus}/mix/on",
+            "output": "/bus/{num_bus}/mix_on",
+        },
+        {
+            "input": "/bus/{num_bus}/config/name",
+            "output": "/bus/{num_bus}/config_name",
+        },
+        {
+            "input": "/bus/{num_bus}/config/color",
+            "output": "/bus/{num_bus}/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+        #Bus Sends
+        {
+            "input": "/bus/{num_bus}/mix/{num_matrix:2}/on",
+            "input_padding": { "num_matrix": 2 },
+            "output_padding": { "num_matrix": 2 },
+            "output": "/bussend/{num_bus}/{num_matrix:2}/mix_on",
+        },
+        {
+            "input": "/bus/{num_bus}/mix/{num_matrix:2}/level",
+            "input_padding": {"num_matrix": 2 },
+            "output_padding": { "num_matrix": 2 },
+            "output": "/bussend/{num_bus}/{num_matrix:2}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        # Matrices
+        {
+            "input": "/mtx/{num_matrix}/mix/fader",
+            "output": "/mtx/{num_matrix}/mix_fader",
+            "output_padding": { "num_matrix": 2 },
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/mtx/{num_matrix}/mix/on",
+            "output": "/mtx/{num_matrix}/mix_on",
+            "output_padding": { "num_matrix": 2 },
+        },
+        {
+            "input": "/mtx/{num_matrix}/config/name",
+            "output": "/mtx/{num_matrix}/config_name",
+            "output_padding": { "num_matrix": 2 },
+        },
+        {
+            "input": "/mtx/{num_matrix}/config/color",
+            "output": "/mtx/{num_matrix}/config_color",
+            "output_padding": { "num_matrix": 2 },
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+
+        #DCAs
+        {
+            "input": "/dca/{num_dca}/mix/fader",
+            "output": "/dca/{num_dca}/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/dca/{num_dca}/mix/on",
+            "output": "/dca/{num_dca}/mix_on",
+        },
+        {
+            "input": "/dca/{num_dca}/config/name",
+            "output": "/dca/{num_dca}/config_name",
+        },
+        {
+            "input": "/dca/{num_dca}/config/color",
+            "output": "/dca/{num_dca}/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+
+        #Headamps
+        {
+            "input": "/headamp/{num_head_amp}/gain",
+            "output_padding": { "num_head_amp": 3 },
+            "indexing": { "num_head_amp": 0 },
+        },
+        {
+            "input": "/headamp/{num_head_amp}/phantom",
+            "output_padding": { "num_head_amp": 3 },
+            "indexing": { "num_head_amp": 0 },
+        },
+
+        # Mains
+        {
+            "input": "/main/st/mix/fader",
+            "output": "/main/st/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/main/st/mix/on",
+            "output": "/main/st/mix_on",
+        },
+        {
+            "input": "/main/st/config/name",
+            "output": "/main/st/config_name",
+        },
+        {
+            "input": "/main/st/config/color",
+            "output": "/main/st/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+
+        # Monos
+        {
+            "input": "/main/m/mix/fader",
+            "output": "/main/m/mix_fader",
+            "secondary_output": [
+                {
+                    "prefix": "_db",
+                    "forward_function": "to_db",
+                    "backwards_function": "from_db",
+                },
+            ]
+        },
+        {
+            "input": "/main/m/mix/on",
+            "output": "/main/m/mix_on",
+        },
+        {
+            "input": "/main/m/config/name",
+            "output": "/main/m/config_name",
+        },
+        {
+            "input": "/main/m/config/color",
+            "output": "/main/m/config_color",
+            "secondary_output": [
+                {
+                    "prefix": "_name",
+                    "forward_function": "color_index_to_name",
+                    "backwards_function": "color_name_to_index",
+                },
+            ]
+        },
+
+        # Show
+        {
+            "input": "/-show/showfile/show/name",
+            "output": "/show/name",
+        },
+        {
+            "input": "/-show/prepos/current",
+            "output": "/scene/current",
+        },
+        # USB
+        {
+            "input": "/-stat/tape/state",
+            "output": "/usb/state",
+            "mapping": {0: "STOP", 1: "PAUSE", 2: "PLAY", 3: "PAUSE_RECORD", 4: "RECORD", 5: "FAST_FORWARD", 6: "REWIND"}
+        },
+        {
+            "input": "/-stat/tape/file",
+            "output": "/usb/file",
+        },
+        {
+            "input": "/-stat/usbmounted",
+            "output": "/usb/mounted",
+        },
     ]
+
 
     cmd_scene_load = "/-action/goscene"
 
