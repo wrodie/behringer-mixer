@@ -1,9 +1,9 @@
 """ Base module for the mixer """
 
+from typing import Optional, Callable, Dict, Any, List
 import asyncio
 import logging
 import time
-from typing import Optional
 from pythonosc.dispatcher import Dispatcher
 from .errors import MixerError
 from . import utils
@@ -180,15 +180,20 @@ class MixerBase:
         for address in self._mappings.keys():
             await self.send(address)
 
-    def _update_state(self, address, values):
-        """Update internal state representation, called when a message is received"""
+    def _update_state(self, address: str, values: List[Any]) -> List[Dict[str, Any]]:
+        """Update internal state representation, called when a message is received
+        Args:
+            address (str): The address to update.
+            values (List[Any]): The values to update.
+
+        Returns:
+            List[Dict[str, Any]]: A list of updates.
+        """
         if address not in self._mappings:
             return []
-        address_data = self._mappings[address]
+        address_data = self._mappings.get(address, {})
         state_key = address_data.get("output")
-        value = values[0]
-        if len(values) > 1:
-            value = values
+        value = values[0] if len(values) == 1 else values
         updates = []
         if state_key:
             if address_data.get("mapping"):
@@ -206,13 +211,18 @@ class MixerBase:
                 updates.append({"property": secondary_key, "value": new_value})
         return updates
 
-    def _build_reverse_mappings(self):
-        """Invert the mapping for self._mappings"""
+    def _build_reverse_mappings(self) -> None:
+        """Invert the mapping for self._mappings."""
         if not self._mappings_reverse:
             self._mappings_reverse = {v["output"]: v for v in self._mappings.values()}
 
-    async def set_value(self, address, value):
-        """Set the value in the mixer"""
+    async def set_value(self, address: str, value: Any) -> None:
+        """Set the value in the mixer
+
+        Args:
+            address (str): The address to process.
+            value (Any): The value to process.
+        """
         address_data = None
         if address in self._secondary_mappings:
             address_data = self._mappings.get(self._secondary_mappings[address])
@@ -235,29 +245,58 @@ class MixerBase:
         await self.send(address_data["input"], value)
         await self.query(address_data["input"])
 
-    def last_received(self):
-        """Return the timestamp of the last time the module received a message from the mixer"""
+    def last_received(self) -> float:
+        """Return the timestamp of the last time the module received a message from the mixer.
+
+        Returns:
+            float: The timestamp of the last received message.
+        """
         return self._last_received
 
-    def subscription_connected(self):
-        """Return true if the module has received a message from the mixer in the last 15 seconds"""
-        return False if (time.time() - self._last_received) > 15 else True
+    def subscription_connected(self) -> bool:
+        """Return true if the module has received a message from the mixer in the last 15 seconds.
 
-    async def subscription_status_register(self, callback_function):
-        """Register a callback function that is called each time the status of the subscription changes"""
+        Returns:
+            bool: True if connected, False otherwise.
+        """
+        return (time.time() - self._last_received) <= 15
+
+    async def subscription_status_register(
+        self, callback_function: Callable[[bool], None]
+    ) -> bool:
+        """Register a callback function that is called each time the status of the subscription changes.
+
+        Args:
+            callback_function (Callable[[bool], None]): The callback function to register.
+
+        Returns:
+            bool: True if registration is successful.
+        """
         self._subscription_status_callback = callback_function
         return True
 
-    def name(self):
-        """Return the name of the mixer"""
+    def name(self) -> Optional[str]:
+        """Return the name of the mixer.
+
+        Returns:
+            Optional[str]: The name of the mixer.
+        """
         return self._mixer_status.get("name")
 
-    def firmware(self):
-        """Return the firmware version of the mixer"""
+    def firmware(self) -> Optional[str]:
+        """Return the firmware version of the mixer.
+
+        Returns:
+            Optional[str]: The firmware version of the mixer.
+        """
         return self._mixer_status.get("firmware")
 
-    def handle_xinfo(self, data):
-        """Handle the return data from xinfo requests"""
+    def handle_xinfo(self, data: List[Any]) -> None:
+        """Handle the return data from xinfo requests.
+
+        Args:
+            data (List[Any]): The data received from the xinfo request.
+        """
         self._mixer_status = {
             "ip_address": data[0],
             "name": data[1],
@@ -265,8 +304,12 @@ class MixerBase:
             "firmware": data[3],
         }
 
-    def dump_mapping(self):
-        """Dump the mapping table"""
+    def dump_mapping(self) -> List[Dict[str, str]]:
+        """Dump the mapping table.
+
+        Returns:
+            List[Dict[str, str]]: The dumped mapping table.
+        """
         output = []
         for original_path in sorted(self._mappings.keys()):
             output.append(
