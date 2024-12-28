@@ -213,6 +213,7 @@ class MixerBase:
 
     async def set_value(self, address, value):
         """Set the value in the mixer"""
+        address_data = None
         if address in self._secondary_mappings:
             address_data = self._mappings.get(self._secondary_mappings[address])
             for suffix, secondary_data in address_data.get(
@@ -222,6 +223,8 @@ class MixerBase:
                     value = getattr(utils, secondary_data["reverse_function"])(value)
                     address = address_data.get("output")
                     break
+        if not address_data:
+            address_data = self._mappings_reverse.get(address) or {}
         if value is False:
             value = 0
         if value is True:
@@ -266,5 +269,10 @@ class MixerBase:
         """Dump the mapping table"""
         output = []
         for original_path in sorted(self._mappings.keys()):
-            output.append((original_path, self._mappings[original_path]["output"]))
+            output.append(
+                {
+                    "input": original_path,
+                    "output": self._mappings[original_path]["output"],
+                }
+            )
         return output

@@ -1,5 +1,10 @@
 import pytest
-from behringer_mixer.utils import fader_to_db, db_to_fader
+from behringer_mixer.utils import (
+    fader_to_db,
+    db_to_fader,
+    color_name_to_index,
+    color_index_to_name,
+)
 
 
 @pytest.mark.parametrize(
@@ -16,3 +21,19 @@ def test_fader_to_db(value, expected):
 )
 def test_db_to_fader(value, expected):
     assert db_to_fader(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [("OFF", 0), ("RD", 1), ("WHi", 15), ("OFFi", 8), ("BLi", 12)],
+)
+def test_color_name_to_index(value, expected):
+    assert color_name_to_index(value) == expected
+
+
+@pytest.mark.parametrize(
+    "expected, value",
+    [("OFF", 0), ("RD", 1), ("WHi", 15), ("OFFi", 8), ("BLi", 12)],
+)
+def test_color_index_to_name(value, expected):
+    assert color_index_to_name(value) == expected
