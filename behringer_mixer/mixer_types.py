@@ -31,17 +31,17 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/ch/{num_channel}/mix/fader",
             "output": "/ch/{num_channel}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/ch/{num_channel}/mix/on",
             "output": "/ch/{num_channel}/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/ch/{num_channel}/config/name",
@@ -50,92 +50,84 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/ch/{num_channel}/config/color",
             "output": "/ch/{num_channel}/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
         # Channel Sends
         {
             "input": "/ch/{num_channel}/mix/{num_bus}/on",
-            "input_padding":    {
-                "num_bus": 2,
-            },
-           "output_padding":    {
+            "input_padding": {
                 "num_bus": 2,
             },
             "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+            "data_type": "boolean",
         },
         {
-            "input": "/ch/{num_channel}/mix/{num_bus}/fader",
-            "input_padding":    {
-                "num_bus": 2,
-            },
-           "output_padding":    {
+            "input": "/ch/{num_channel}/mix/{num_bus}/level",
+            "input_padding": {
                 "num_bus": 2,
             },
             "output": "/chsend/{num_channel}/{num_bus}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         # Auxins
         {
             "input": "/auxin/{num_auxin}/mix/fader",
-            "input_padding": { "num_auxin": 2 },
+            "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/auxin/{num_auxin}/mix/on",
-            "input_padding": { "num_auxin": 2 },
+            "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/auxin/{num_auxin}/config/name",
-            "input_padding": { "num_auxin": 2 },
+            "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/config_name",
         },
         {
             "input": "/auxin/{num_auxin}/config/color",
-            "input_padding": { "num_auxin": 2 },
+            "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
         # Busses
         {
             "input": "/bus/{num_bus}/mix/fader",
             "output": "/bus/{num_bus}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/bus/{num_bus}/mix/on",
             "output": "/bus/{num_bus}/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/bus/{num_bus}/config/name",
@@ -144,85 +136,80 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/bus/{num_bus}/config/color",
             "output": "/bus/{num_bus}/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
-        #Bus Sends
+        # Bus Sends
         {
-            "input": "/bus/{num_bus}/mix/{num_matrix:2}/on",
-            "input_padding": { "num_matrix": 2 },
-            "output_padding": { "num_matrix": 2 },
-            "output": "/bussend/{num_bus}/{num_matrix:2}/mix_on",
+            "input": "/bus/{num_bus}/mix/{num_matrix}/on",
+            "input_padding": {"num_matrix": 2},
+            "output": "/bussend/{num_bus}/{num_matrix}/mix_on",
+            "data_type": "boolean",
         },
         {
-            "input": "/bus/{num_bus}/mix/{num_matrix:2}/level",
-            "input_padding": {"num_matrix": 2 },
-            "output_padding": { "num_matrix": 2 },
-            "output": "/bussend/{num_bus}/{num_matrix:2}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "input": "/bus/{num_bus}/mix/{num_matrix}/level",
+            "input_padding": {"num_matrix": 2},
+            "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         # Matrices
         {
             "input": "/mtx/{num_matrix}/mix/fader",
             "output": "/mtx/{num_matrix}/mix_fader",
-            "output_padding": { "num_matrix": 2 },
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "input_padding": {"num_matrix": 2},
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/mtx/{num_matrix}/mix/on",
             "output": "/mtx/{num_matrix}/mix_on",
-            "output_padding": { "num_matrix": 2 },
+            "input_padding": {"num_matrix": 2},
+            "data_type": "boolean",
         },
         {
             "input": "/mtx/{num_matrix}/config/name",
             "output": "/mtx/{num_matrix}/config_name",
-            "output_padding": { "num_matrix": 2 },
+            "input_padding": {"num_matrix": 2},
         },
         {
             "input": "/mtx/{num_matrix}/config/color",
             "output": "/mtx/{num_matrix}/config_color",
-            "output_padding": { "num_matrix": 2 },
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "input_padding": {"num_matrix": 2},
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
-
-        #DCAs
+        # DCAs
         {
-            "input": "/dca/{num_dca}/mix/fader",
+            "input": "/dca/{num_dca}/fader",
             "output": "/dca/{num_dca}/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
-            "input": "/dca/{num_dca}/mix/on",
+            "input": "/dca/{num_dca}/on",
             "output": "/dca/{num_dca}/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/dca/{num_dca}/config/name",
@@ -231,42 +218,37 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/dca/{num_dca}/config/color",
             "output": "/dca/{num_dca}/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
-
-        #Headamps
+        # Headamps
         {
             "input": "/headamp/{num_head_amp}/gain",
-            "output_padding": { "num_head_amp": 3 },
-            "indexing": { "num_head_amp": 0 },
+            "input_indexing": {"num_head_amp": 0},
         },
         {
             "input": "/headamp/{num_head_amp}/phantom",
-            "output_padding": { "num_head_amp": 3 },
-            "indexing": { "num_head_amp": 0 },
+            "input_indexing": {"num_head_amp": 0},
         },
-
         # Mains
         {
             "input": "/main/st/mix/fader",
             "output": "/main/st/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/main/st/mix/on",
             "output": "/main/st/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/main/st/config/name",
@@ -275,30 +257,28 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/main/st/config/color",
             "output": "/main/st/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
-
         # Monos
         {
             "input": "/main/m/mix/fader",
             "output": "/main/m/mix_fader",
-            "secondary_output": [
-                {
-                    "prefix": "_db",
-                    "forward_function": "to_db",
-                    "backwards_function": "from_db",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
                 },
-            ]
+            },
         },
         {
             "input": "/main/m/mix/on",
             "output": "/main/m/mix_on",
+            "data_type": "boolean",
         },
         {
             "input": "/main/m/config/name",
@@ -307,15 +287,13 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/main/m/config/color",
             "output": "/main/m/config_color",
-            "secondary_output": [
-                {
-                    "prefix": "_name",
+            "secondary_output": {
+                "_name": {
                     "forward_function": "color_index_to_name",
-                    "backwards_function": "color_name_to_index",
+                    "reverse_function": "color_name_to_index",
                 },
-            ]
+            },
         },
-
         # Show
         {
             "input": "/-show/showfile/show/name",
@@ -329,7 +307,15 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/-stat/tape/state",
             "output": "/usb/state",
-            "mapping": {0: "STOP", 1: "PAUSE", 2: "PLAY", 3: "PAUSE_RECORD", 4: "RECORD", 5: "FAST_FORWARD", 6: "REWIND"}
+            "mapping": {
+                0: "STOP",
+                1: "PAUSE",
+                2: "PLAY",
+                3: "PAUSE_RECORD",
+                4: "RECORD",
+                5: "FAST_FORWARD",
+                6: "REWIND",
+            },
         },
         {
             "input": "/-stat/tape/file",
@@ -340,7 +326,6 @@ class MixerTypeBase(MixerBase):
             "output": "/usb/mounted",
         },
     ]
-
 
     cmd_scene_load = "/-action/goscene"
 
@@ -411,14 +396,8 @@ class MixerTypeXAir(MixerTypeBase):
             "/ch/{num_channel}/mix/{num_bus:2}/grpon",
             "/chsend/{num_channel}/{num_bus:2}/mix/on",
         ],
-        [
-            "/headamp/{num_head_amp:2,1}/gain",
-            "/headamp/{num_head_amp:3,1}/gain"
-        ],
-        [
-            "/headamp/{num_head_amp:2,1}/phantom",
-            "/headamp/{num_head_amp:3,1}/phantom"
-        ],
+        ["/headamp/{num_head_amp:2,1}/gain", "/headamp/{num_head_amp:3,1}/gain"],
+        ["/headamp/{num_head_amp:2,1}/phantom", "/headamp/{num_head_amp:3,1}/phantom"],
     ]
 
     def __init__(self, **kwargs):
@@ -439,6 +418,7 @@ class MixerTypeX32(MixerTypeBase):
     num_matrix: int = 6
     has_mono: bool = True
     num_head_amp: int = 128
+
 
 class MixerTypeXR12(MixerTypeXAir):
     """Class for Behringer XR-12 Mixer"""
