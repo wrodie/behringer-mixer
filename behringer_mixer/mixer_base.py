@@ -4,7 +4,6 @@ from typing import Optional, Callable, Dict, Any, List
 import asyncio
 import logging
 import time
-from pythonosc.dispatcher import Dispatcher
 from .errors import MixerError
 from . import utils
 from .mixer_osc import OSCClientServer
@@ -77,10 +76,8 @@ class MixerBase:
     async def start(self):
         """Startup the server"""
         if not self.server:
-            dispatcher = Dispatcher()
-            dispatcher.set_default_handler(self.msg_handler)
             self.server = OSCClientServer(
-                (self.ip, self.port), dispatcher, asyncio.get_event_loop()
+                (self.ip, self.port), self.msg_handler, asyncio.get_event_loop()
             )
             transport, protocol = await self.server.create_serve_endpoint()
             self.server.register_transport(transport, protocol)
@@ -206,7 +203,9 @@ class MixerBase:
                 "secondary_output", {}
             ).items():
                 secondary_key = state_key + suffix
-                new_value = getattr(utils, secondary_data["forward_function"])(value)
+                new_value = getattr(utils, secondary_data["forward_function"])(
+                    value, address_data
+                )
                 self._state[secondary_key] = new_value
                 updates.append({"property": secondary_key, "value": new_value})
         return updates
@@ -230,7 +229,9 @@ class MixerBase:
                 "secondary_output", {}
             ).items():
                 if address.endswith(suffix):
-                    value = getattr(utils, secondary_data["reverse_function"])(value)
+                    value = getattr(utils, secondary_data["reverse_function"])(
+                        value, address_data
+                    )
                     address = address_data.get("output")
                     break
         if not address_data:
@@ -242,8 +243,9 @@ class MixerBase:
         if address_data.get("mapping"):
             reverse_map = {v: k for k, v in address_data["mapping"].items()}
             value = reverse_map[value]
-        await self.send(address_data["input"], value)
-        await self.query(address_data["input"])
+        if address_data:
+            await self.send(address_data["input"], value)
+            await self.query(address_data["input"])
 
     def last_received(self) -> float:
         """Return the timestamp of the last time the module received a message from the mixer.

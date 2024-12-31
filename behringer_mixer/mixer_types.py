@@ -229,10 +229,23 @@ class MixerTypeBase(MixerBase):
         {
             "input": "/headamp/{num_head_amp}/gain",
             "input_indexing": {"num_head_amp": 0},
+            "data_type": "linf",
+            "data_type_config": {
+                "min": -12.000,
+                "max": 60.000,
+                "step": 0.500,
+            },
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "linf_to_db",
+                    "reverse_function": "db_to_linf",
+                },
+            },
         },
         {
             "input": "/headamp/{num_head_amp}/phantom",
             "input_indexing": {"num_head_amp": 0},
+            "data_type": "boolean",
         },
         # Mains
         {
@@ -388,16 +401,62 @@ class MixerTypeXAir(MixerTypeBase):
     cmd_scene_load = "/-snap/load"
 
     extra_addresses_to_load = [
-        ["/lr/mix/fader", "/main/st/mix/fader"],
-        ["/lr/mix/on", "/main/st/mix/on"],
-        ["/lr/config/name", "/main/st/config/name"],
-        ["/-snap/index", "/scene/current"],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/grpon",
-            "/chsend/{num_channel}/{num_bus:2}/mix/on",
-        ],
-        ["/headamp/{num_head_amp:2,1}/gain", "/headamp/{num_head_amp:3,1}/gain"],
-        ["/headamp/{num_head_amp:2,1}/phantom", "/headamp/{num_head_amp:3,1}/phantom"],
+        # Mains
+        {
+            "input": "/lr/mix/fader",
+            "output": "/main/st/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "input": "/lr/mix/on",
+            "output": "/main/st/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "input": "/lr/config/name",
+            "output": "/main/st/config_name",
+        },
+        {
+            "input": "/lr/config/color",
+            "output": "/main/st/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        {
+            "input": "/-snap/index",
+            "output": "/scene/current",
+        },
+        {
+            "input": "/ch/{num_channel}/mix/{num_bus}/grpon",
+            "input_padding": {
+                "num_bus": 2,
+            },
+            "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+            "data_type": "boolean",
+        },
+        # Headamps
+        {
+            "input": "/headamp/{num_head_amp}/gain",
+            "input_padding": {
+                "num_head_amp": 2,
+            },
+        },
+        {
+            "input": "/headamp/{num_head_amp}/phantom",
+            "input_padding": {
+                "num_head_amp": 2,
+            },
+            "data_type": "boolean",
+        },
     ]
 
     def __init__(self, **kwargs):
