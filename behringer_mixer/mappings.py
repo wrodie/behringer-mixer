@@ -11,18 +11,25 @@ def build_mappings(mixer):
 
     mappings = {}
     secondary_mappings = {}
-    for address_row in mixer.addresses_to_load:
-        (new_mappings, new_secondary_mappings) = expand_address(mixer, address_row)
+    reverse_mappings = {}  # Used to detect duplicate mappings
+    addresses = mixer.addresses_to_load + mixer.extra_addresses_to_load
+    for address_row in addresses:
+        (new_mappings, new_secondary_mappings, remove_mappings) = expand_address(
+            mixer, address_row, reverse_mappings
+        )
         mappings.update(new_mappings)
+        for remove_mapping in remove_mappings:
+            del mappings[remove_mapping]
         secondary_mappings.update(new_secondary_mappings)
     return mappings, secondary_mappings
 
 
-def expand_address(mixer, address_tuple):
+def expand_address(mixer, address_tuple, reverse_mappings):
     """Expand an address including wildcards"""
     mappings = {}
     secondary_mappings = {}
     processlist = [address_tuple]
+    remove_mappings = []
     while processlist:
         row = processlist.pop(-1)
         input = row.get("input")
@@ -63,8 +70,10 @@ def expand_address(mixer, address_tuple):
                     address = row["output"] + suffix
                     secondary_mappings[address] = row["input"]
             mappings[input] = row
-
-    return mappings, secondary_mappings
+            if row["output"] in reverse_mappings:
+                remove_mappings.append(reverse_mappings[row["output"]])
+            reverse_mappings[row["output"]] = row["input"]
+    return mappings, secondary_mappings, remove_mappings
 
 
 def get_padding_num(mixer, row, field_type: str, output=False):

@@ -31,6 +31,7 @@ class MixerBase:
     }
 
     def __init__(self, **kwargs):
+        """Initialize the mixer"""
         self.ip = kwargs.get("ip")
         self.port = kwargs.get("port") or self.port_number
         self._delay = kwargs.get("delay", 0) if "delay" in kwargs else self.delay
@@ -47,7 +48,7 @@ class MixerBase:
         self._last_received = 0
         self._subscription_status_callback = None
         self._subscription_status_connection = False
-
+        self.extra_addresses_to_load = self.extra_addresses_to_load or []
         (self._mappings, self._secondary_mappings) = build_mappings(self)
         self._build_reverse_mappings()
 

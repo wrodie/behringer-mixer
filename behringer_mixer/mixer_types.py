@@ -277,36 +277,6 @@ class MixerTypeBase(MixerBase):
                 },
             },
         },
-        # Monos
-        {
-            "input": "/main/m/mix/fader",
-            "output": "/main/m/mix_fader",
-            "secondary_output": {
-                "_db": {
-                    "forward_function": "fader_to_db",
-                    "reverse_function": "db_to_fader",
-                },
-            },
-        },
-        {
-            "input": "/main/m/mix/on",
-            "output": "/main/m/mix_on",
-            "data_type": "boolean",
-        },
-        {
-            "input": "/main/m/config/name",
-            "output": "/main/m/config_name",
-        },
-        {
-            "input": "/main/m/config/color",
-            "output": "/main/m/config_color",
-            "secondary_output": {
-                "_name": {
-                    "forward_function": "color_index_to_name",
-                    "reverse_function": "color_name_to_index",
-                },
-            },
-        },
         # Show
         {
             "input": "/-show/showfile/show/name",
@@ -400,67 +370,68 @@ class MixerTypeXAir(MixerTypeBase):
 
     cmd_scene_load = "/-snap/load"
 
-    extra_addresses_to_load = [
-        # Mains
-        {
-            "input": "/lr/mix/fader",
-            "output": "/main/st/mix_fader",
-            "secondary_output": {
-                "_db": {
-                    "forward_function": "fader_to_db",
-                    "reverse_function": "db_to_fader",
-                },
-            },
-        },
-        {
-            "input": "/lr/mix/on",
-            "output": "/main/st/mix_on",
-            "data_type": "boolean",
-        },
-        {
-            "input": "/lr/config/name",
-            "output": "/main/st/config_name",
-        },
-        {
-            "input": "/lr/config/color",
-            "output": "/main/st/config_color",
-            "secondary_output": {
-                "_name": {
-                    "forward_function": "color_index_to_name",
-                    "reverse_function": "color_name_to_index",
-                },
-            },
-        },
-        {
-            "input": "/-snap/index",
-            "output": "/scene/current",
-        },
-        {
-            "input": "/ch/{num_channel}/mix/{num_bus}/grpon",
-            "input_padding": {
-                "num_bus": 2,
-            },
-            "output": "/chsend/{num_channel}/{num_bus}/mix_on",
-            "data_type": "boolean",
-        },
-        # Headamps
-        {
-            "input": "/headamp/{num_head_amp}/gain",
-            "input_padding": {
-                "num_head_amp": 2,
-            },
-        },
-        {
-            "input": "/headamp/{num_head_amp}/phantom",
-            "input_padding": {
-                "num_head_amp": 2,
-            },
-            "data_type": "boolean",
-        },
-    ]
-
     def __init__(self, **kwargs):
-        self.addresses_to_load += self.extra_addresses_to_load
+        """Initialize the XAir mixer"""
+
+        print("XAir")
+        self.extra_addresses_to_load = [
+            # Mains
+            {
+                "input": "/lr/mix/fader",
+                "output": "/main/st/mix_fader",
+                "secondary_output": {
+                    "_db": {
+                        "forward_function": "fader_to_db",
+                        "reverse_function": "db_to_fader",
+                    },
+                },
+            },
+            {
+                "input": "/lr/mix/on",
+                "output": "/main/st/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "input": "/lr/config/name",
+                "output": "/main/st/config_name",
+            },
+            {
+                "input": "/lr/config/color",
+                "output": "/main/st/config_color",
+                "secondary_output": {
+                    "_name": {
+                        "forward_function": "color_index_to_name",
+                        "reverse_function": "color_name_to_index",
+                    },
+                },
+            },
+            {
+                "input": "/-snap/index",
+                "output": "/scene/current",
+            },
+            {
+                "input": "/ch/{num_channel}/mix/{num_bus}/grpon",
+                "input_padding": {
+                    "num_bus": 2,
+                },
+                "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+                "data_type": "boolean",
+            },
+            # Headamps
+            {
+                "input": "/headamp/{num_head_amp}/gain",
+                "input_padding": {
+                    "num_head_amp": 2,
+                },
+            },
+            {
+                "input": "/headamp/{num_head_amp}/phantom",
+                "input_padding": {
+                    "num_head_amp": 2,
+                },
+                "data_type": "boolean",
+            },
+        ]
         super().__init__(**kwargs)
 
 
@@ -477,6 +448,42 @@ class MixerTypeX32(MixerTypeBase):
     num_matrix: int = 6
     has_mono: bool = True
     num_head_amp: int = 128
+
+    def __init__(self, **kwargs):
+        """Initialize the X32 mixer"""
+        self.extra_addresses_to_load = [
+            # Monos
+            {
+                "input": "/main/m/mix/fader",
+                "output": "/main/m/mix_fader",
+                "secondary_output": {
+                    "_db": {
+                        "forward_function": "fader_to_db",
+                        "reverse_function": "db_to_fader",
+                    },
+                },
+            },
+            {
+                "input": "/main/m/mix/on",
+                "output": "/main/m/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "input": "/main/m/config/name",
+                "output": "/main/m/config_name",
+            },
+            {
+                "input": "/main/m/config/color",
+                "output": "/main/m/config_color",
+                "secondary_output": {
+                    "_name": {
+                        "forward_function": "color_index_to_name",
+                        "reverse_function": "color_name_to_index",
+                    },
+                },
+            },
+        ]
+        super().__init__(**kwargs)
 
 
 class MixerTypeXR12(MixerTypeXAir):
