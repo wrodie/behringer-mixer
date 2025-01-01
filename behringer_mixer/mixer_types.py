@@ -29,6 +29,7 @@ class MixerTypeBase(MixerBase):
         },
         # Channels
         {
+            "tag": "channels",
             "input": "/ch/{num_channel}/mix/fader",
             "output": "/ch/{num_channel}/mix_fader",
             "secondary_output": {
@@ -39,15 +40,18 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "channels",
             "input": "/ch/{num_channel}/mix/on",
             "output": "/ch/{num_channel}/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "channels",
             "input": "/ch/{num_channel}/config/name",
             "output": "/ch/{num_channel}/config_name",
         },
         {
+            "tag": "channels",
             "input": "/ch/{num_channel}/config/color",
             "output": "/ch/{num_channel}/config_color",
             "secondary_output": {
@@ -59,6 +63,7 @@ class MixerTypeBase(MixerBase):
         },
         # Channel Sends
         {
+            "tag": "channelsends",
             "input": "/ch/{num_channel}/mix/{num_bus}/on",
             "input_padding": {
                 "num_bus": 2,
@@ -67,6 +72,7 @@ class MixerTypeBase(MixerBase):
             "data_type": "boolean",
         },
         {
+            "tag": "channelsends",
             "input": "/ch/{num_channel}/mix/{num_bus}/level",
             "input_padding": {
                 "num_bus": 2,
@@ -81,6 +87,7 @@ class MixerTypeBase(MixerBase):
         },
         # Auxins
         {
+            "tag": "auxins",
             "input": "/auxin/{num_auxin}/mix/fader",
             "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/mix_fader",
@@ -92,17 +99,20 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "auxins",
             "input": "/auxin/{num_auxin}/mix/on",
             "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "auxins",
             "input": "/auxin/{num_auxin}/config/name",
             "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/config_name",
         },
         {
+            "tag": "auxins",
             "input": "/auxin/{num_auxin}/config/color",
             "input_padding": {"num_auxin": 2},
             "output": "/auxin/{num_auxin}/config_color",
@@ -115,6 +125,7 @@ class MixerTypeBase(MixerBase):
         },
         # Busses
         {
+            "tag": "busses",
             "input": "/bus/{num_bus}/mix/fader",
             "output": "/bus/{num_bus}/mix_fader",
             "secondary_output": {
@@ -125,15 +136,18 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "busses",
             "input": "/bus/{num_bus}/mix/on",
             "output": "/bus/{num_bus}/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "busses",
             "input": "/bus/{num_bus}/config/name",
             "output": "/bus/{num_bus}/config_name",
         },
         {
+            "tag": "busses",
             "input": "/bus/{num_bus}/config/color",
             "output": "/bus/{num_bus}/config_color",
             "secondary_output": {
@@ -145,12 +159,14 @@ class MixerTypeBase(MixerBase):
         },
         # Bus Sends
         {
+            "tag": "bussends",
             "input": "/bus/{num_bus}/mix/{num_matrix}/on",
             "input_padding": {"num_matrix": 2},
             "output": "/bussend/{num_bus}/{num_matrix}/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "bussends",
             "input": "/bus/{num_bus}/mix/{num_matrix}/level",
             "input_padding": {"num_matrix": 2},
             "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
@@ -163,6 +179,7 @@ class MixerTypeBase(MixerBase):
         },
         # Matrices
         {
+            "tag": "matrices",
             "input": "/mtx/{num_matrix}/mix/fader",
             "output": "/mtx/{num_matrix}/mix_fader",
             "input_padding": {"num_matrix": 2},
@@ -174,17 +191,20 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "matrices",
             "input": "/mtx/{num_matrix}/mix/on",
             "output": "/mtx/{num_matrix}/mix_on",
             "input_padding": {"num_matrix": 2},
             "data_type": "boolean",
         },
         {
+            "tag": "matrices",
             "input": "/mtx/{num_matrix}/config/name",
             "output": "/mtx/{num_matrix}/config_name",
             "input_padding": {"num_matrix": 2},
         },
         {
+            "tag": "matrices",
             "input": "/mtx/{num_matrix}/config/color",
             "output": "/mtx/{num_matrix}/config_color",
             "input_padding": {"num_matrix": 2},
@@ -197,6 +217,7 @@ class MixerTypeBase(MixerBase):
         },
         # DCAs
         {
+            "tag": "dcas",
             "input": "/dca/{num_dca}/fader",
             "output": "/dca/{num_dca}/mix_fader",
             "secondary_output": {
@@ -207,15 +228,18 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "dcas",
             "input": "/dca/{num_dca}/on",
             "output": "/dca/{num_dca}/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "dcas",
             "input": "/dca/{num_dca}/config/name",
             "output": "/dca/{num_dca}/config_name",
         },
         {
+            "tag": "dcas",
             "input": "/dca/{num_dca}/config/color",
             "output": "/dca/{num_dca}/config_color",
             "secondary_output": {
@@ -227,6 +251,7 @@ class MixerTypeBase(MixerBase):
         },
         # Headamps
         {
+            "tag": "headamps",
             "input": "/headamp/{num_head_amp}/gain",
             "input_indexing": {"num_head_amp": 0},
             "data_type": "linf",
@@ -243,12 +268,14 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "headamps",
             "input": "/headamp/{num_head_amp}/phantom",
             "input_indexing": {"num_head_amp": 0},
             "data_type": "boolean",
         },
         # Mains
         {
+            "tag": "mains",
             "input": "/main/st/mix/fader",
             "output": "/main/st/mix_fader",
             "secondary_output": {
@@ -259,15 +286,18 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "mains",
             "input": "/main/st/mix/on",
             "output": "/main/st/mix_on",
             "data_type": "boolean",
         },
         {
+            "tag": "mains",
             "input": "/main/st/config/name",
             "output": "/main/st/config_name",
         },
         {
+            "tag": "mains",
             "input": "/main/st/config/color",
             "output": "/main/st/config_color",
             "secondary_output": {
@@ -279,15 +309,18 @@ class MixerTypeBase(MixerBase):
         },
         # Show
         {
+            "tag": "show",
             "input": "/-show/showfile/show/name",
             "output": "/show/name",
         },
         {
+            "tag": "show",
             "input": "/-show/prepos/current",
             "output": "/scene/current",
         },
         # USB
         {
+            "tag": "usb",
             "input": "/-stat/tape/state",
             "output": "/usb/state",
             "mapping": {
@@ -301,10 +334,12 @@ class MixerTypeBase(MixerBase):
             },
         },
         {
+            "tag": "usb",
             "input": "/-stat/tape/file",
             "output": "/usb/file",
         },
         {
+            "tag": "usb",
             "input": "/-stat/usbmounted",
             "output": "/usb/mounted",
         },
@@ -377,6 +412,7 @@ class MixerTypeXAir(MixerTypeBase):
         self.extra_addresses_to_load = [
             # Mains
             {
+                "tag": "mains",
                 "input": "/lr/mix/fader",
                 "output": "/main/st/mix_fader",
                 "secondary_output": {
@@ -387,15 +423,18 @@ class MixerTypeXAir(MixerTypeBase):
                 },
             },
             {
+                "tag": "mains",
                 "input": "/lr/mix/on",
                 "output": "/main/st/mix_on",
                 "data_type": "boolean",
             },
             {
+                "tag": "mains",
                 "input": "/lr/config/name",
                 "output": "/main/st/config_name",
             },
             {
+                "tag": "mains",
                 "input": "/lr/config/color",
                 "output": "/main/st/config_color",
                 "secondary_output": {
@@ -406,10 +445,12 @@ class MixerTypeXAir(MixerTypeBase):
                 },
             },
             {
+                "tag": "show",
                 "input": "/-snap/index",
                 "output": "/scene/current",
             },
             {
+                "tag": "bussends",
                 "input": "/ch/{num_channel}/mix/{num_bus}/grpon",
                 "input_padding": {
                     "num_bus": 2,
@@ -419,12 +460,14 @@ class MixerTypeXAir(MixerTypeBase):
             },
             # Headamps
             {
+                "tag": "headamps",
                 "input": "/headamp/{num_head_amp}/gain",
                 "input_padding": {
                     "num_head_amp": 2,
                 },
             },
             {
+                "tag": "headamps",
                 "input": "/headamp/{num_head_amp}/phantom",
                 "input_padding": {
                     "num_head_amp": 2,
@@ -454,6 +497,7 @@ class MixerTypeX32(MixerTypeBase):
         self.extra_addresses_to_load = [
             # Monos
             {
+                "tag": "mono",
                 "input": "/main/m/mix/fader",
                 "output": "/main/m/mix_fader",
                 "secondary_output": {
@@ -464,15 +508,18 @@ class MixerTypeX32(MixerTypeBase):
                 },
             },
             {
+                "tag": "mono",
                 "input": "/main/m/mix/on",
                 "output": "/main/m/mix_on",
                 "data_type": "boolean",
             },
             {
+                "tag": "mono",
                 "input": "/main/m/config/name",
                 "output": "/main/m/config_name",
             },
             {
+                "tag": "mono",
                 "input": "/main/m/config/color",
                 "output": "/main/m/config_color",
                 "secondary_output": {

@@ -32,6 +32,8 @@ def expand_address(mixer, address_tuple, reverse_mappings):
     remove_mappings = []
     while processlist:
         row = processlist.pop(-1)
+        if mixer.include and row.get("tag") and row.get("tag") not in mixer.include:
+            continue
         input = row.get("input")
         output = row.get("output") or input
         matches = re.search(r"\{(.*?)\}", input)

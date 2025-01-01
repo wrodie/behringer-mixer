@@ -79,6 +79,19 @@ The following keyword arguments may be passed:
 -   `delay`: a delay between each command, defaults to 20ms.
     -   a note about delay, stability may rely on network connection. For wired connections the delay can be safely reduced.  
 -   `logLevel`: the level of logging, defaults to warning (enums from logging eg logging.DEBUG)
+-   `include`: Optional. A list of what types of data to include. eg ["channels","bussess"] If not included then ALL data is returned.   Valid values are:
+    - `channels`
+    - `channelsends`
+    - `auxins`
+    - `busses`
+    - `bussends`
+    - `matrices`
+    - `dcas`
+    - `headamps`
+    - `mains`
+    - `mono`
+    - `show`
+    - `usb`
 
 The create function only creates an instance of the mixer, it does not 'connect' to it.
 You should call the `mixer.start()` function to prepare communication and then call `mixer.validate_connection()` to check that the connection to the mixer worked.
