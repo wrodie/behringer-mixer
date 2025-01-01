@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 import yaml
 from behringer_mixer import mixer_api

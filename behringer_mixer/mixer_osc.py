@@ -1,11 +1,14 @@
+from typing import Callable
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_message_builder import OscMessageBuilder
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 
 
 class OSCClientServer(AsyncIOOSCUDPServer):
-    def __init__(self, address: str, dispatcher: Dispatcher, event_loop):
+    def __init__(self, address: str, msg_handler: Callable, event_loop):
         """Create OSC Server"""
+        dispatcher = Dispatcher()
+        dispatcher.set_default_handler(msg_handler)
         super().__init__(("0.0.0.0", 0), dispatcher, event_loop)
         self.mixer_address = address
         self.event_loop = event_loop

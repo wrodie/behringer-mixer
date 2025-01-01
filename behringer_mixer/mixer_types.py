@@ -16,59 +16,333 @@ class MixerTypeBase(MixerBase):
     num_auxrtn: int = 0
     num_matrix: int = 0
     num_scenes: int = 100
+    num_head_amp: int = 0
     has_mono: bool = False
 
+    # input_padding - use automatic if not specified
+    # output_padding - use 0 if not specified
+
     addresses_to_load = [
-        ["/xinfo", "/status"],
-        ["/ch/{num_channel}/mix/fader"],
-        ["/ch/{num_channel}/mix/on"],
-        ["/ch/{num_channel}/config/name"],
-        ["/ch/{num_channel}/config/color"],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/on",
-            "/chsend/{num_channel}/{num_bus:2}/mix/on",
-        ],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/level",
-            "/chsend/{num_channel}/{num_bus:2}/mix/fader",
-        ],
-        ["/auxin/{num_auxin:2}/mix/fader"],
-        ["/auxin/{num_auxin:2}/mix/on"],
-        ["/auxin/{num_auxin:2}/config/name"],
-        ["/auxin/{num_auxin:2}/config/color"],
-        ["/bus/{num_bus}/mix/fader"],
-        ["/bus/{num_bus}/mix/on"],
-        ["/bus/{num_bus}/config/name"],
-        ["/bus/{num_bus}/config/color"],
-        [
-            "/bus/{num_bus}/mix/{num_matrix:2}/on",
-            "/bussend/{num_bus}/{num_matrix:2}/mix/on",
-        ],
-        [
-            "/bus/{num_bus}/mix/{num_matrix:2}/level",
-            "/bussend/{num_bus}/{num_matrix:2}/mix/fader",
-        ],
-        ["/mtx/{num_matrix:2}/mix/fader"],
-        ["/mtx/{num_matrix:2}/mix/on"],
-        ["/mtx/{num_matrix:2}/config/name"],
-        ["/mtx/{num_matrix:2}/config/color"],
-        ["/dca/{num_dca}/fader", "/dca/{num_dca}/mix/fader"],
-        ["/dca/{num_dca}/on", "/dca/{num_dca}/mix/on"],
-        ["/dca/{num_dca}/config/name"],
-        ["/dca/{num_dca}/config/color"],
-        ["/main/st/mix/fader"],
-        ["/main/st/mix/on"],
-        ["/main/st/config/name"],
-        ["/main/st/config/color"],
-        ["/main/m/mix/fader"],
-        ["/main/m/mix/on"],
-        ["/main/m/config/name"],
-        ["/main/m/config/color"],
-        ["/-show/showfile/show/name", "/show/name"],
-        ["/-show/prepos/current", "/scene/current"],
-        ["/-stat/tape/state", "/usb/state", {0: "STOP", 1: "PAUSE", 2: "PLAY", 3: "PAUSE_RECORD", 4: "RECORD", 5: "FAST_FORWARD", 6: "REWIND"}],
-        ["/-stat/tape/file", "/usb/file"],
-        ["/-stat/usbmounted", "/usb/mounted"],
+        {
+            "input": "/xinfo",
+            "output": "/status",
+        },
+        # Channels
+        {
+            "tag": "channels",
+            "input": "/ch/{num_channel}/mix/fader",
+            "output": "/ch/{num_channel}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "channels",
+            "input": "/ch/{num_channel}/mix/on",
+            "output": "/ch/{num_channel}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "channels",
+            "input": "/ch/{num_channel}/config/name",
+            "output": "/ch/{num_channel}/config_name",
+        },
+        {
+            "tag": "channels",
+            "input": "/ch/{num_channel}/config/color",
+            "output": "/ch/{num_channel}/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # Channel Sends
+        {
+            "tag": "channelsends",
+            "input": "/ch/{num_channel}/mix/{num_bus}/on",
+            "input_padding": {
+                "num_bus": 2,
+            },
+            "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "channelsends",
+            "input": "/ch/{num_channel}/mix/{num_bus}/level",
+            "input_padding": {
+                "num_bus": 2,
+            },
+            "output": "/chsend/{num_channel}/{num_bus}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        # Auxins
+        {
+            "tag": "auxins",
+            "input": "/auxin/{num_auxin}/mix/fader",
+            "input_padding": {"num_auxin": 2},
+            "output": "/auxin/{num_auxin}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "auxins",
+            "input": "/auxin/{num_auxin}/mix/on",
+            "input_padding": {"num_auxin": 2},
+            "output": "/auxin/{num_auxin}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "auxins",
+            "input": "/auxin/{num_auxin}/config/name",
+            "input_padding": {"num_auxin": 2},
+            "output": "/auxin/{num_auxin}/config_name",
+        },
+        {
+            "tag": "auxins",
+            "input": "/auxin/{num_auxin}/config/color",
+            "input_padding": {"num_auxin": 2},
+            "output": "/auxin/{num_auxin}/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # Busses
+        {
+            "tag": "busses",
+            "input": "/bus/{num_bus}/mix/fader",
+            "output": "/bus/{num_bus}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "busses",
+            "input": "/bus/{num_bus}/mix/on",
+            "output": "/bus/{num_bus}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "busses",
+            "input": "/bus/{num_bus}/config/name",
+            "output": "/bus/{num_bus}/config_name",
+        },
+        {
+            "tag": "busses",
+            "input": "/bus/{num_bus}/config/color",
+            "output": "/bus/{num_bus}/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # Bus Sends
+        {
+            "tag": "bussends",
+            "input": "/bus/{num_bus}/mix/{num_matrix}/on",
+            "input_padding": {"num_matrix": 2},
+            "output": "/bussend/{num_bus}/{num_matrix}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "bussends",
+            "input": "/bus/{num_bus}/mix/{num_matrix}/level",
+            "input_padding": {"num_matrix": 2},
+            "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        # Matrices
+        {
+            "tag": "matrices",
+            "input": "/mtx/{num_matrix}/mix/fader",
+            "output": "/mtx/{num_matrix}/mix_fader",
+            "input_padding": {"num_matrix": 2},
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "matrices",
+            "input": "/mtx/{num_matrix}/mix/on",
+            "output": "/mtx/{num_matrix}/mix_on",
+            "input_padding": {"num_matrix": 2},
+            "data_type": "boolean",
+        },
+        {
+            "tag": "matrices",
+            "input": "/mtx/{num_matrix}/config/name",
+            "output": "/mtx/{num_matrix}/config_name",
+            "input_padding": {"num_matrix": 2},
+        },
+        {
+            "tag": "matrices",
+            "input": "/mtx/{num_matrix}/config/color",
+            "output": "/mtx/{num_matrix}/config_color",
+            "input_padding": {"num_matrix": 2},
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # DCAs
+        {
+            "tag": "dcas",
+            "input": "/dca/{num_dca}/fader",
+            "output": "/dca/{num_dca}/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "dcas",
+            "input": "/dca/{num_dca}/on",
+            "output": "/dca/{num_dca}/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "dcas",
+            "input": "/dca/{num_dca}/config/name",
+            "output": "/dca/{num_dca}/config_name",
+        },
+        {
+            "tag": "dcas",
+            "input": "/dca/{num_dca}/config/color",
+            "output": "/dca/{num_dca}/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # Headamps
+        {
+            "tag": "headamps",
+            "input": "/headamp/{num_head_amp}/gain",
+            "input_indexing": {"num_head_amp": 0},
+            "data_type": "linf",
+            "data_type_config": {
+                "min": -12.000,
+                "max": 60.000,
+                "step": 0.500,
+            },
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "linf_to_db",
+                    "reverse_function": "db_to_linf",
+                },
+            },
+        },
+        {
+            "tag": "headamps",
+            "input": "/headamp/{num_head_amp}/phantom",
+            "input_indexing": {"num_head_amp": 0},
+            "data_type": "boolean",
+        },
+        # Mains
+        {
+            "tag": "mains",
+            "input": "/main/st/mix/fader",
+            "output": "/main/st/mix_fader",
+            "secondary_output": {
+                "_db": {
+                    "forward_function": "fader_to_db",
+                    "reverse_function": "db_to_fader",
+                },
+            },
+        },
+        {
+            "tag": "mains",
+            "input": "/main/st/mix/on",
+            "output": "/main/st/mix_on",
+            "data_type": "boolean",
+        },
+        {
+            "tag": "mains",
+            "input": "/main/st/config/name",
+            "output": "/main/st/config_name",
+        },
+        {
+            "tag": "mains",
+            "input": "/main/st/config/color",
+            "output": "/main/st/config_color",
+            "secondary_output": {
+                "_name": {
+                    "forward_function": "color_index_to_name",
+                    "reverse_function": "color_name_to_index",
+                },
+            },
+        },
+        # Show
+        {
+            "tag": "show",
+            "input": "/-show/showfile/show/name",
+            "output": "/show/name",
+        },
+        {
+            "tag": "show",
+            "input": "/-show/prepos/current",
+            "output": "/scene/current",
+        },
+        # USB
+        {
+            "tag": "usb",
+            "input": "/-stat/tape/state",
+            "output": "/usb/state",
+            "mapping": {
+                0: "STOP",
+                1: "PAUSE",
+                2: "PLAY",
+                3: "PAUSE_RECORD",
+                4: "RECORD",
+                5: "FAST_FORWARD",
+                6: "REWIND",
+            },
+        },
+        {
+            "tag": "usb",
+            "input": "/-stat/tape/file",
+            "output": "/usb/file",
+        },
+        {
+            "tag": "usb",
+            "input": "/-stat/usbmounted",
+            "output": "/usb/mounted",
+        },
     ]
 
     cmd_scene_load = "/-action/goscene"
@@ -116,6 +390,10 @@ class MixerTypeBase(MixerBase):
                 "number": 0,
                 "base_address": "bussend",
             },
+            "head_amps": {
+                "number": self.num_head_amp,
+                "base_address": "headamp",
+            },
             "has_mono": self.has_mono,
         }
 
@@ -127,19 +405,76 @@ class MixerTypeXAir(MixerTypeBase):
 
     cmd_scene_load = "/-snap/load"
 
-    extra_addresses_to_load = [
-        ["/lr/mix/fader", "/main/st/mix/fader"],
-        ["/lr/mix/on", "/main/st/mix/on"],
-        ["/lr/config/name", "/main/st/config/name"],
-        ["/-snap/index", "/scene/current"],
-        [
-            "/ch/{num_channel}/mix/{num_bus:2}/grpon",
-            "/chsend/{num_channel}/{num_bus:2}/mix/on",
-        ],
-    ]
-
     def __init__(self, **kwargs):
-        self.addresses_to_load += self.extra_addresses_to_load
+        """Initialize the XAir mixer"""
+
+        print("XAir")
+        self.extra_addresses_to_load = [
+            # Mains
+            {
+                "tag": "mains",
+                "input": "/lr/mix/fader",
+                "output": "/main/st/mix_fader",
+                "secondary_output": {
+                    "_db": {
+                        "forward_function": "fader_to_db",
+                        "reverse_function": "db_to_fader",
+                    },
+                },
+            },
+            {
+                "tag": "mains",
+                "input": "/lr/mix/on",
+                "output": "/main/st/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "tag": "mains",
+                "input": "/lr/config/name",
+                "output": "/main/st/config_name",
+            },
+            {
+                "tag": "mains",
+                "input": "/lr/config/color",
+                "output": "/main/st/config_color",
+                "secondary_output": {
+                    "_name": {
+                        "forward_function": "color_index_to_name",
+                        "reverse_function": "color_name_to_index",
+                    },
+                },
+            },
+            {
+                "tag": "show",
+                "input": "/-snap/index",
+                "output": "/scene/current",
+            },
+            {
+                "tag": "bussends",
+                "input": "/ch/{num_channel}/mix/{num_bus}/grpon",
+                "input_padding": {
+                    "num_bus": 2,
+                },
+                "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+                "data_type": "boolean",
+            },
+            # Headamps
+            {
+                "tag": "headamps",
+                "input": "/headamp/{num_head_amp}/gain",
+                "input_padding": {
+                    "num_head_amp": 2,
+                },
+            },
+            {
+                "tag": "headamps",
+                "input": "/headamp/{num_head_amp}/phantom",
+                "input_padding": {
+                    "num_head_amp": 2,
+                },
+                "data_type": "boolean",
+            },
+        ]
         super().__init__(**kwargs)
 
 
@@ -155,6 +490,47 @@ class MixerTypeX32(MixerTypeBase):
     num_auxrtn: int = 8
     num_matrix: int = 6
     has_mono: bool = True
+    num_head_amp: int = 128
+
+    def __init__(self, **kwargs):
+        """Initialize the X32 mixer"""
+        self.extra_addresses_to_load = [
+            # Monos
+            {
+                "tag": "mono",
+                "input": "/main/m/mix/fader",
+                "output": "/main/m/mix_fader",
+                "secondary_output": {
+                    "_db": {
+                        "forward_function": "fader_to_db",
+                        "reverse_function": "db_to_fader",
+                    },
+                },
+            },
+            {
+                "tag": "mono",
+                "input": "/main/m/mix/on",
+                "output": "/main/m/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "tag": "mono",
+                "input": "/main/m/config/name",
+                "output": "/main/m/config_name",
+            },
+            {
+                "tag": "mono",
+                "input": "/main/m/config/color",
+                "output": "/main/m/config_color",
+                "secondary_output": {
+                    "_name": {
+                        "forward_function": "color_index_to_name",
+                        "reverse_function": "color_name_to_index",
+                    },
+                },
+            },
+        ]
+        super().__init__(**kwargs)
 
 
 class MixerTypeXR12(MixerTypeXAir):
@@ -165,6 +541,7 @@ class MixerTypeXR12(MixerTypeXAir):
     num_bus: int = 2
     num_dca: int = 4
     num_fx: int = 4
+    num_head_amp: int = 4
 
 
 class MixerTypeXR16(MixerTypeXAir):
@@ -175,6 +552,7 @@ class MixerTypeXR16(MixerTypeXAir):
     num_bus: int = 4
     num_dca: int = 4
     num_fx: int = 4
+    num_head_amp: int = 8
 
 
 class MixerTypeXR18(MixerTypeXAir):
@@ -186,6 +564,7 @@ class MixerTypeXR18(MixerTypeXAir):
     num_dca: int = 4
     num_fx: int = 4
     num_auxrtn: int = 2
+    num_head_amp: int = 16
 
 
 _supported_mixers = [

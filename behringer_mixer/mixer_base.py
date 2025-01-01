@@ -1,13 +1,13 @@
 """ Base module for the mixer """
-import re
+
+from typing import Optional, Callable, Dict, Any, List
 import asyncio
 import logging
 import time
-from typing import Optional
-from pythonosc.dispatcher import Dispatcher
 from .errors import MixerError
-from .utils import fader_to_db, db_to_fader, color_index_to_name, color_name_to_index
+from . import utils
 from .mixer_osc import OSCClientServer
+from .mappings import build_mappings
 
 
 class MixerBase:
@@ -19,7 +19,7 @@ class MixerBase:
 
     _info_response = []
     port_number: int = 10023
-    #delay: float = 0.000
+    # delay: float = 0.000
     addresses_to_load = []
     cmd_scene_load = ""
     tasks = set()
@@ -31,25 +31,27 @@ class MixerBase:
     }
 
     def __init__(self, **kwargs):
+        """Initialize the mixer"""
         self.ip = kwargs.get("ip")
         self.port = kwargs.get("port") or self.port_number
         self._delay = kwargs.get("delay", 0) if "delay" in kwargs else self.delay
         self.logger.addHandler(logging.StreamHandler())
         self.logger.setLevel(kwargs.get("logLevel") or logging.WARNING)
+        self.include = kwargs.get("include") or []
         if not self.ip:
             raise MixerError("No valid ip detected")
 
         self._callback_function = None
         self.subscription = None
         self._state = {}
-        self._mappings = {}
-        self._data_mappings = {}
         self._mappings_reverse = {}
-        self._valid_addresses = {}
         self.server = None
         self._last_received = 0
         self._subscription_status_callback = None
         self._subscription_status_connection = False
+        self.extra_addresses_to_load = self.extra_addresses_to_load or []
+        (self._mappings, self._secondary_mappings) = build_mappings(self)
+        self._build_reverse_mappings()
 
     async def validate_connection(self):
         """Validate connection to the mixer"""
@@ -76,10 +78,8 @@ class MixerBase:
     async def start(self):
         """Startup the server"""
         if not self.server:
-            dispatcher = Dispatcher()
-            dispatcher.set_default_handler(self.msg_handler)
             self.server = OSCClientServer(
-                (self.ip, self.port), dispatcher, asyncio.get_event_loop()
+                (self.ip, self.port), self.msg_handler, asyncio.get_event_loop()
             )
             transport, protocol = await self.server.create_serve_endpoint()
             self.server.register_transport(transport, protocol)
@@ -117,6 +117,7 @@ class MixerBase:
         await self._subscribe_worker("/xremote", callback_function)
 
     async def _subscribe_worker(self, parameter_string, callback_function):
+        """Worker to handle subscription and renewal of OSC messages."""
         self._callback_function = callback_function
         await self.send(parameter_string)
         renew_string = "/renew"
@@ -175,163 +176,150 @@ class MixerBase:
 
     async def _load_initial(self):
         """Load initial state"""
-        expanded_addresses = []
-        for address_row in self.addresses_to_load:
-            (new_expanded_address_list, new_mappings) = self._expand_address(
-                address_row
-            )
-            expanded_addresses = expanded_addresses + new_expanded_address_list
-            self._mappings.update(new_mappings)
-
-        for address in expanded_addresses:
-            self._valid_addresses[address] = True
+        for address in self._mappings.keys():
             await self.send(address)
 
-    def _expand_address(self, address_tuple):
-        # Expand an address including wildcards
-        expanded_addresses = []
-        mappings = {}
-        processlist = [address_tuple]
-        while processlist:
-            row = processlist.pop(-1)
-            address = row[0]
-            rewrite_address = row[1] if len(row) > 1 else None
-            data_mapping = row[2] if len(row) > 2 else None
-            matches = re.search(r"\{(.*?)(:(\d)){0,1}\}", address)
-            if matches:
-                match_var = matches.group(1)
-                max_count = getattr(self, match_var)
-                zfill_num = int(matches.group(3) or 0) or len(str(max_count))
-                for number in range(1, max_count + 1):
-                    new_rewrite_address = ""
-                    mapping_address = address
-                    new_address = address.replace(
-                        "{" + match_var + str(matches.group(2) or "") + "}",
-                        str(number).zfill(zfill_num),
-                    )
-                    mapping_address = mapping_address.replace(
-                        "{" + match_var + str(matches.group(2) or "") + "}", str(number)
-                    )
-                    if rewrite_address:
-                        mapping_address = rewrite_address.replace(
-                            "{" + match_var + str(matches.group(2) or "") + "}",
-                            str(number),
-                        )
-                        # str(number).zfill(zfill_num),
-                    processlist.append([new_address, mapping_address, data_mapping])
-            else:
-                expanded_addresses.append(address)
-                mapping_address = rewrite_address if rewrite_address else address
-                mapping_address = re.sub(
-                    r"((?:st|m|\d+)/[^\d]+)(/)([^\d]+)$", r"\g<1>_\g<3>", mapping_address
-                )
-                if data_mapping:
-                    self._data_mappings[address] = data_mapping
-                if mapping_address != address:
-                    mappings[address] = mapping_address
-        return (expanded_addresses, mappings)
+    def _update_state(self, address: str, values: List[Any]) -> List[Dict[str, Any]]:
+        """Update internal state representation, called when a message is received
+        Args:
+            address (str): The address to update.
+            values (List[Any]): The values to update.
 
-    def _update_state(self, address, values):
-        # update internal state representation
-        # State looks like
-        #    /ch/2/mix_fader = Value
-        #    /ch/2/config_name = Value
-        if not address in self._valid_addresses:
+        Returns:
+            List[Dict[str, Any]]: A list of updates.
+        """
+        if address not in self._mappings:
             return []
-        state_key = self._mappings.get(address) or address
-        value = values[0]
-        if len(values) > 1:
-            value = values
+        address_data = self._mappings.get(address, {})
+        state_key = address_data.get("output")
+        value = values[0] if len(values) == 1 else values
         updates = []
         if state_key:
-            if self._data_mappings.get(address):
-                value = self._data_mappings[address].get(value)
-            if state_key.endswith("_on") or state_key.endswith("/on"):
+            if address_data.get("mapping"):
+                value = address_data["mapping"].get(value)
+            if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
-            state_key = re.sub(r"/0+(\d+)/", r"/\1/", state_key)
             self._state[state_key] = value
             updates.append({"property": state_key, "value": value})
-            if state_key.endswith("_fader"):
-                db_val = fader_to_db(value)
-                self._state[state_key + "_db"] = db_val
-                updates.append({"property": state_key + "_db", "value": db_val})
-            elif state_key.endswith("_color"):
-                color_name = color_index_to_name(value)
-                self._state[state_key + "_name"] = color_name
-                updates.append({"property": state_key + "_name", "value": color_name})
+            for suffix, secondary_data in address_data.get(
+                "secondary_output", {}
+            ).items():
+                secondary_key = state_key + suffix
+                new_value = getattr(utils, secondary_data["forward_function"])(
+                    value, address_data
+                )
+                self._state[secondary_key] = new_value
+                updates.append({"property": secondary_key, "value": new_value})
         return updates
 
-    def _build_reverse_mappings(self):
-        # Invert the mapping for self._mappings
+    def _build_reverse_mappings(self) -> None:
+        """Invert the mapping for self._mappings."""
         if not self._mappings_reverse:
-            self._mappings_reverse = {v: k for k, v in self._mappings.items()}
+            self._mappings_reverse = {v["output"]: v for v in self._mappings.values()}
 
-    async def set_value(self, address, value):
-        """Set the value in the mixer"""
-        if address.endswith("_db"):
-            address = address.replace("_db", "")
-            value = db_to_fader(value)
-        elif address.endswith("_color_name"):
-            address = address.replace("_name", "")
-            value = color_name_to_index(value)
+    async def set_value(self, address: str, value: Any) -> None:
+        """Set the value in the mixer
+
+        Args:
+            address (str): The address to process.
+            value (Any): The value to process.
+        """
+        address_data = None
+        if address in self._secondary_mappings:
+            address_data = self._mappings.get(self._secondary_mappings[address])
+            for suffix, secondary_data in address_data.get(
+                "secondary_output", {}
+            ).items():
+                if address.endswith(suffix):
+                    value = getattr(utils, secondary_data["reverse_function"])(
+                        value, address_data
+                    )
+                    address = address_data.get("output")
+                    break
+        if not address_data:
+            address_data = self._mappings_reverse.get(address) or {}
         if value is False:
             value = 0
         if value is True:
             value = 1
-        self._build_reverse_mappings()
-        true_address = self._mappings_reverse.get(address) or address
-        if self._data_mappings.get(true_address):
-            reverse_map = {v: k for k, v in self._data_mappings[true_address].items()}
-            value = reverse_map.get(value)
-        await self.send(true_address, value)
-        await self.query(true_address)
+        if address_data.get("mapping"):
+            reverse_map = {v: k for k, v in address_data["mapping"].items()}
+            value = reverse_map[value]
+        if address_data:
+            await self.send(address_data["input"], value)
+            await self.query(address_data["input"])
 
-    def _redo_padding(self, address):
-        # Go through address and see if it matches with one of the known address
-        # if so, make sure the numbers are padded correctly
+    def last_received(self) -> float:
+        """Return the timestamp of the last time the module received a message from the mixer.
 
-        for address_row in self.addresses_to_load:
-            initial_address = address_row[0]
-            matches = re.search(r"^(.*)/{(num_[a-z]+?)(:(\d)){0,1}}", initial_address)
-            if matches:
-                init_string = matches.group(1)
-                if address.startswith(init_string):
-                    max_count = getattr(self, matches.group(2))
-                    zfill_num = int(matches.group(4) or 0) or len(str(max_count))
-                    sub_match = re.search(r"^" + init_string + r"/(\d+)/", address)
-                    num = sub_match.group(1)
-                    address = address.replace(
-                        f"{init_string}/{num}/",
-                        f"{init_string}/" + str(num).zfill(zfill_num) + "/",
-                    )
-        return address
-
-    def last_received(self):
-        # Return the timestamp of the last time the module received a message from the mixer
+        Returns:
+            float: The timestamp of the last received message.
+        """
         return self._last_received
 
-    def subscription_connected(self):
-        # Return true if the module has received a message from the mixer in the last 15 seconds
-        return False if (time.time() - self._last_received) > 15 else True
+    def subscription_connected(self) -> bool:
+        """Return true if the module has received a message from the mixer in the last 15 seconds.
 
-    async def subscription_status_register(self, callback_function):
-        # register a callback function that is called each time the status of the subscription changes
+        Returns:
+            bool: True if connected, False otherwise.
+        """
+        return (time.time() - self._last_received) <= 15
+
+    async def subscription_status_register(
+        self, callback_function: Callable[[bool], None]
+    ) -> bool:
+        """Register a callback function that is called each time the status of the subscription changes.
+
+        Args:
+            callback_function (Callable[[bool], None]): The callback function to register.
+
+        Returns:
+            bool: True if registration is successful.
+        """
         self._subscription_status_callback = callback_function
         return True
 
-    def name(self):
-        # Return the name of the mixer
+    def name(self) -> Optional[str]:
+        """Return the name of the mixer.
+
+        Returns:
+            Optional[str]: The name of the mixer.
+        """
         return self._mixer_status.get("name")
 
-    def firmware(self):
-        # Return the firmware version of the mixer
+    def firmware(self) -> Optional[str]:
+        """Return the firmware version of the mixer.
+
+        Returns:
+            Optional[str]: The firmware version of the mixer.
+        """
         return self._mixer_status.get("firmware")
 
-    def handle_xinfo(self, data):
-        # Handle the return data from xinfo requests
+    def handle_xinfo(self, data: List[Any]) -> None:
+        """Handle the return data from xinfo requests.
+
+        Args:
+            data (List[Any]): The data received from the xinfo request.
+        """
         self._mixer_status = {
             "ip_address": data[0],
             "name": data[1],
             "type": data[2],
             "firmware": data[3],
         }
+
+    def dump_mapping(self) -> List[Dict[str, str]]:
+        """Dump the mapping table.
+
+        Returns:
+            List[Dict[str, str]]: The dumped mapping table.
+        """
+        output = []
+        for original_path in sorted(self._mappings.keys()):
+            output.append(
+                {
+                    "input": original_path,
+                    "output": self._mappings[original_path]["output"],
+                }
+            )
+        return output
