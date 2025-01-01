@@ -4,6 +4,8 @@ from behringer_mixer.utils import (
     db_to_fader,
     color_name_to_index,
     color_index_to_name,
+    linf_to_db,
+    db_to_linf,
 )
 
 
@@ -37,3 +39,31 @@ def test_color_name_to_index(value, expected):
 )
 def test_color_index_to_name(value, expected):
     assert color_index_to_name(value, {}) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected, min, max",
+    [
+        (1.0, 60, -12, 60),
+        (0.8912509381337456, 52.17006754562968, -12, 60),
+        (0.1, -4.8, -12, 60),
+        (0.0, -12, -12, 60),
+    ],
+)
+def test_linf_to_db(value, expected, min, max):
+    config = {"data_type_config": {"min": min, "max": max}}
+    assert linf_to_db(value, config) == expected
+
+
+@pytest.mark.parametrize(
+    "expected, value, min, max",
+    [
+        (1.0, 60, -12, 60),
+        (0.8912509381337456, 52.17006754562968, -12, 60),
+        (0.1, -4.8, -12, 60),
+        (0.0, -12, -12, 60),
+    ],
+)
+def test_db_to_linf(value, expected, min, max):
+    config = {"data_type_config": {"min": min, "max": max}}
+    assert db_to_linf(value, config) == expected
