@@ -18,6 +18,9 @@ class MixerTypeBase(MixerBase):
     num_scenes: int = 100
     num_head_amp: int = 0
     has_mono: bool = False
+    info_address: str = "/xinfo"
+    subscription_string: str = "/xremote"
+    subscription_renew_string: str = "/renew"
 
     # input_padding - use automatic if not specified
     # output_padding - use 0 if not specified
@@ -567,11 +570,87 @@ class MixerTypeXR18(MixerTypeXAir):
     num_head_amp: int = 16
 
 
+class MixerTypeWING(MixerTypeBase):
+    """Class for Behringer Wing Mixer"""
+
+    port_number: int = 2223
+    mixer_type: str = "Wing"
+    #num_channel: int = 48
+    num_channel: int = 1
+    #num_bus: int = 16
+    num_bus: int = 1
+    #num_dca: int = 16
+    num_dca: int = 1
+    num_fx: int = 8
+    #num_auxin: int = 8
+    num_auxin: int = 1
+    #num_auxrtn: int = 8
+    num_auxrtn: int = 1
+    #num_matrix: int = 8
+    num_matrix: int = 1
+    has_mono: bool = True
+    #num_head_amp: int = 128
+    num_head_amp: int = 1
+    info_address: str = "/WING?"
+    subscription_string: str = "/*s"
+    subscription_renew_string: str = "/*s"
+
+    def __init__(self, **kwargs):
+        """Initialize the Wing mixer"""
+        self.extra_addresses_to_load = [
+            {
+                "input": "WING?",
+                "output": "/status",
+            },
+            # Channels
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/fdr",
+                "output": "/ch/{num_channel}/mix_fader",
+                "input_padding": {
+                    "num_channel": 1,
+                },            
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/mute",
+                "output": "/ch/{num_channel}/mix_on",
+                "data_type": "boolean_inverted",
+                "data_index": 2,
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/$name",
+                "output": "/ch/{num_channel}/config_name",
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/$col",
+                "output": "/ch/{num_channel}/config_color",
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+        ]
+        super().__init__(**kwargs)
+
+
 _supported_mixers = [
     "X32",
     "XR18",
     "XR16",
     "XR12",
+    "WING",
 ]
 
 

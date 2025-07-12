@@ -55,7 +55,7 @@ class MixerBase:
 
     async def validate_connection(self):
         """Validate connection to the mixer"""
-        await self.send("/xinfo")
+        await self.send(self.info_address)
         await asyncio.sleep(self._CONNECT_TIMEOUT)
         if not self.info_response:
             self.logger.debug(
@@ -89,6 +89,7 @@ class MixerBase:
         """Handle callback response"""
 
         self.logger.debug(f"received: {addr} {data if data else ''}")
+        self.logger.debug(f"received: a={addr} d={data if data else ''}")
         self._last_received = time.time()
         updates = self._update_state(addr, data)
         if addr == "/xinfo":
@@ -114,20 +115,21 @@ class MixerBase:
 
     async def subscribe(self, callback_function):
         """run the subscribe worker"""
-        await self._subscribe_worker("/xremote", callback_function)
+        # await self._subscribe_worker("/xremote", callback_function)
+        await self._subscribe_worker(self.subscription_string, callback_function)
 
     async def _subscribe_worker(self, parameter_string, callback_function):
         """Worker to handle subscription and renewal of OSC messages."""
         self._callback_function = callback_function
         await self.send(parameter_string)
-        renew_string = "/renew"
-        if parameter_string == "/xremote":
-            renew_string = "/xremote"
+        renew_string = self.subscription_renew_string
+        if parameter_string == self.subscription_string:
+            renew_string = self.subscription_string
         self._subscription_status_connection = True
         while self._callback_function:
             await asyncio.sleep(9)
             await self.send(renew_string)
-            await self.send("/xinfo")
+            await self.send(self.info_address)
             if self.subscription_connected() != self._subscription_status_connection:
                 self._subscription_status_connection = (
                     True if self.subscription_connected() else False
@@ -192,24 +194,38 @@ class MixerBase:
             return []
         address_data = self._mappings.get(address, {})
         state_key = address_data.get("output")
+        print(f"Updating state for address: {address} with values: {values}")
+        print(f"values if of type: {type(values)}")
+        print(values)
         value = values[0] if len(values) == 1 else values
+        print(f"value if of type: {type(value)}")
+        print(value)
         updates = []
         if state_key:
+            if "data_index" in address_data:
+                value = values[address_data["data_index"]]
             if address_data.get("mapping"):
                 value = address_data["mapping"].get(value)
             if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
+            if address_data.get("data_type", "") == "boolean_inverted":
+                print(f"Inverting boolean value: {value}")
+                value = not bool(value)
             self._state[state_key] = value
             updates.append({"property": state_key, "value": value})
             for suffix, secondary_data in address_data.get(
                 "secondary_output", {}
             ).items():
                 secondary_key = state_key + suffix
-                new_value = getattr(utils, secondary_data["forward_function"])(
-                    value, address_data
-                )
-                self._state[secondary_key] = new_value
-                updates.append({"property": secondary_key, "value": new_value})
+                secondary_value = value
+                if "data_index" in secondary_data:
+                    secondary_value = values[secondary_data["data_index"]]           
+                if "forward_function" in secondary_data:
+                    secondary_value = getattr(utils, secondary_data["forward_function"])(
+                        secondary_value, address_data
+                    )
+                self._state[secondary_key] = secondary_value
+                updates.append({"property": secondary_key, "value": secondary_value})
         return updates
 
     def _build_reverse_mappings(self) -> None:
