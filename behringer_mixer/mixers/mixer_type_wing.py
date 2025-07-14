@@ -1,0 +1,338 @@
+from .mixer_types_base import MixerTypeBase
+
+
+class MixerTypeWING(MixerTypeBase):
+    """Class for Behringer WING Mixer"""
+
+    port_number: int = 2223
+    mixer_type: str = "WING"
+    num_channel: int = 48  # Set to 48 for real use
+    num_bus: int = 16  # Set to 16 for real use
+    num_dca: int = 16  # Set to 8 or 16 for real use
+    num_fx: int = 8
+    num_auxin: int = 8  # Set to 8 for real use
+    num_auxrtn: int = 0  # Set to 8 for real use
+    num_matrix: int = 8  # Set to 8 for real use
+    has_mono: bool = False
+    num_head_amp: int = 1  # Set to 128 for real use
+    num_mains: int = 4
+    info_address: str = "/WING?"
+    subscription_string: str = "/*s"
+    subscription_renew_string: str = "/*s"
+
+    def __init__(self, **kwargs):
+        self.extra_addresses_to_load = [
+            {
+                "input": "WING?",
+                "output": "/status",
+            },
+            # Channels
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/fdr",
+                "output": "/ch/{num_channel}/mix_fader",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/mute",
+                "output": "/ch/{num_channel}/mix_on",
+                "data_type": "boolean_inverted",
+                "data_index": 2,
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/$name",
+                "output": "/ch/{num_channel}/config_name",
+            },
+            {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/$col",
+                "output": "/ch/{num_channel}/config_color",
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # Channel Sends
+            {
+                "tag": "channelsends",
+                "input": "/ch/{num_channel}/send/{num_bus}/on",
+                "data_index": 2,
+                "input_padding": {
+                    "num_bus": 1,
+                },
+                "output": "/chsend/{num_channel}/{num_bus}/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelsends",
+                "input": "/ch/{num_channel}/send/{num_bus}/lvl",
+                "input_padding": {
+                    "num_bus": 1,
+                    "num_channel": 1,
+                },
+                "output": "/chsend/{num_channel}/{num_bus}/mix_fader",
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            # Auxins
+            {
+                "tag": "auxins",
+                "input": "/aux/{num_auxin}/fdr",
+                "input_padding": {"num_auxin": 1},
+                "output": "/auxin/{num_auxin}/mix_fader",
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "auxins",
+                "input": "/aux/{num_auxin}/mute",
+                "input_padding": {"num_auxin": 1},
+                "output": "/auxin/{num_auxin}/mix_on",
+                "data_type": "boolean_inverted",
+                "data_index": 2,
+            },
+            {
+                "tag": "auxins",
+                "input": "/aux/{num_auxin}/$name",
+                "input_padding": {"num_auxin": 1},
+                "output": "/auxin/{num_auxin}/config_name",
+            },
+            {
+                "tag": "auxins",
+                "input": "/aux/{num_auxin}/$col",
+                "input_padding": {"num_auxin": 1},
+                "output": "/auxin/{num_auxin}/config_color",
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # Busses
+            {
+                "tag": "busses",
+                "input": "/bus/{num_bus}/fdr",
+                "output": "/bus/{num_bus}/mix_fader",
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "busses",
+                "input": "/bus/{num_bus}/mute",
+                "output": "/bus/{num_bus}/mix_on",
+                "data_type": "boolean_inverted",
+                "data_index": 2,
+            },
+            {
+                "tag": "busses",
+                "input": "/bus/{num_bus}/$name",
+                "output": "/bus/{num_bus}/config_name",
+            },
+            {
+                "tag": "busses",
+                "input": "/bus/{num_bus}/$col",
+                "output": "/bus/{num_bus}/config_color",
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # Bus Matrix Sends
+            {
+                "tag": "bussends",
+                "input": "/bus/{num_bus}/send/MX{num_matrix}/on",
+                "input_padding": {"num_matrix": 1, "num_bus": 1},
+                "output": "/bussend/{num_bus}/{num_matrix}/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "tag": "bussends",
+                "input": "/bus/{num_bus}/mix/MX{num_matrix}/lvl",
+                "input_padding": {"num_matrix": 1, "num_bus": 1},
+                "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            # Matrices
+            {
+                "tag": "matrices",
+                "input": "/mtx/{num_matrix}/fdr",
+                "output": "/mtx/{num_matrix}/mix_fader",
+                "input_padding": {"num_matrix": 1},
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "matrices",
+                "input": "/mtx/{num_matrix}/mute",
+                "output": "/mtx/{num_matrix}/mix_on",
+                "input_padding": {"num_matrix": 1},
+                "data_type": "boolean_inverted",
+            },
+            {
+                "tag": "matrices",
+                "input": "/mtx/{num_matrix}/$name",
+                "output": "/mtx/{num_matrix}/config_name",
+                "input_padding": {"num_matrix": 1},
+            },
+            {
+                "tag": "matrices",
+                "input": "/mtx/{num_matrix}/$col",
+                "output": "/mtx/{num_matrix}/config_color",
+                "input_padding": {"num_matrix": 1},
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # DCAs
+            {
+                "tag": "dcas",
+                "input": "/dca/{num_dca}/fdr",
+                "output": "/dca/{num_dca}/mix_fader",
+                "input_padding": {"num_dca": 1},
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "dcas",
+                "input": "/dca/{num_dca}/mute",
+                "output": "/dca/{num_dca}/mix_on",
+                "data_type": "boolean_inverted",
+                "input_padding": {"num_dca": 1},
+            },
+            {
+                "tag": "dcas",
+                "input": "/dca/{num_dca}/name",
+                "output": "/dca/{num_dca}/config_name",
+                "input_padding": {"num_dca": 1},
+            },
+            {
+                "tag": "dcas",
+                "input": "/dca/{num_dca}/col",
+                "output": "/dca/{num_dca}/config_color",
+                "input_padding": {"num_dca": 1},
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # Mains
+            {
+                "tag": "mains",
+                "input": "/main/{num_mains}/fdr",
+                "output": "/main/{num_mains}/mix_fader",
+                "input_padding": {"num_mains": 1},
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
+            {
+                "tag": "mains",
+                "input": "/main/{num_mains}/mute",
+                "output": "/main/{num_mains}/mix_on",
+                "input_padding": {"num_mains": 1},
+                "data_type": "boolean_inverted",
+            },
+            {
+                "tag": "mains",
+                "input": "/main/{num_mains}/$name",
+                "output": "/main/{num_mains}/config_name",
+                "input_padding": {"num_mains": 1},
+            },
+            {
+                "tag": "mains",
+                "input": "/main/{num_mains}/$col",
+                "output": "/main/{num_mains}/config_color",
+                "input_padding": {"num_mains": 1},
+                "data_index": 0,
+                "secondary_output": {
+                    "_name": {
+                        "data_index": 0,
+                        "forward_function": "wing_color_index_to_name",
+                        "reverse_function": "wing_color_name_to_index",
+                    },
+                },
+            },
+            # Show
+            {
+                "tag": "show",
+                "input": "/$ctl/lib/$actshow",
+                "output": "/show/name",
+            },
+            {
+                "tag": "show",
+                "input": "/$ctl/lib/$actidx",
+                "output": "/scene/current",
+                "data_index": 2,
+            },
+            # USB
+            {
+                "tag": "usb",
+                "input": "/play/$action",
+                "output": "/usb/state",
+            },
+            {
+                "tag": "usb",
+                "input": "/play/$actfile",
+                "output": "/usb/file",
+            },
+        ]
+
+        super().__init__(**kwargs)

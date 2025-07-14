@@ -115,7 +115,6 @@ class MixerBase:
 
     async def subscribe(self, callback_function):
         """run the subscribe worker"""
-        # await self._subscribe_worker("/xremote", callback_function)
         await self._subscribe_worker(self.subscription_string, callback_function)
 
     async def _subscribe_worker(self, parameter_string, callback_function):
@@ -219,11 +218,11 @@ class MixerBase:
                 secondary_key = state_key + suffix
                 secondary_value = value
                 if "data_index" in secondary_data:
-                    secondary_value = values[secondary_data["data_index"]]           
+                    secondary_value = values[secondary_data["data_index"]]
                 if "forward_function" in secondary_data:
-                    secondary_value = getattr(utils, secondary_data["forward_function"])(
-                        secondary_value, address_data
-                    )
+                    secondary_value = getattr(
+                        utils, secondary_data["forward_function"]
+                    )(secondary_value, address_data)
                 self._state[secondary_key] = secondary_value
                 updates.append({"property": secondary_key, "value": secondary_value})
         return updates
