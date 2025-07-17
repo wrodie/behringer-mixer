@@ -14,7 +14,7 @@ class MixerTypeWING(MixerTypeBase):
     num_auxrtn: int = 0  # Set to 8 for real use
     num_matrix: int = 8  # Set to 8 for real use
     has_mono: bool = False
-    num_head_amp: int = 1  # Set to 128 for real use
+    num_head_amp: int = 0  # Set to 128 for real use
     num_mains: int = 4
     info_address: str = "/?"
     subscription_string: str = "/*s"
@@ -38,6 +38,7 @@ class MixerTypeWING(MixerTypeBase):
                     "num_channel": 1,
                 },
                 "data_index": 1,
+                "write_transform": "fader_to_db",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -77,6 +78,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_bus": 1,
                 },
+                "write_transform": "fader_to_db",
                 "output": "/chsend/{num_channel}/{num_bus}/mix_on",
                 "data_type": "boolean",
             },
@@ -102,6 +104,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/mix_fader",
                 "data_index": 1,
+                "write_transform": "fader_to_db",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -142,6 +145,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/bus/{num_bus}/fdr",
                 "output": "/bus/{num_bus}/mix_fader",
                 "data_index": 1,
+                "write_transform": "fader_to_db",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -186,6 +190,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/bus/{num_bus}/mix/MX{num_matrix}/lvl",
                 "input_padding": {"num_matrix": 1, "num_bus": 1},
                 "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
+                "write_transform": "fader_to_db",
                 "data_index": 1,
                 "secondary_output": {
                     "_db": {
@@ -198,6 +203,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "matrices",
                 "input": "/mtx/{num_matrix}/fdr",
                 "output": "/mtx/{num_matrix}/mix_fader",
+                "write_transform": "fader_to_db",
                 "input_padding": {"num_matrix": 1},
                 "data_index": 1,
                 "secondary_output": {
@@ -238,6 +244,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "dcas",
                 "input": "/dca/{num_dca}/fdr",
                 "output": "/dca/{num_dca}/mix_fader",
+                "write_transform": "fader_to_db",
                 "input_padding": {"num_dca": 1},
                 "data_index": 1,
                 "secondary_output": {
@@ -278,6 +285,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "mains",
                 "input": "/main/{num_mains}/fdr",
                 "output": "/main/{num_mains}/mix_fader",
+                "write_transform": "fader_to_db",
                 "input_padding": {"num_mains": 1},
                 "data_index": 1,
                 "secondary_output": {
@@ -318,17 +326,30 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "show",
                 "input": "/$ctl/lib/$actshow",
                 "output": "/show/name",
+                "data_index": 0,
             },
             {
                 "tag": "show",
                 "input": "/$ctl/lib/$actidx",
                 "output": "/scene/current",
-                "data_index": 2,
+                "data_index": 0,
+            },
+            {
+                "tag": "show",
+                "input": "/$ctl/lib/$active",
+                "output": "/scene/name",
+                "data_index": 0,
+            },
+            {
+                "tag": "show",
+                "input": "/$ctl/lib/$actionidx",
+                "output": "/scene/next_scene",
+                "data_index": 0,
             },
             # USB
             {
                 "tag": "usb",
-                "input": "/play/$action",
+                "input": "/play/$actstate",
                 "output": "/usb/state",
             },
             {

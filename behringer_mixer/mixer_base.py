@@ -164,7 +164,9 @@ class MixerBase:
 
     async def load_scene(self, scene_number):
         """Load a new scene on the mixer"""
-        await self.send(self.cmd_scene_load, scene_number)
+        await self.send(self.cmd_scene_load, str(scene_number))
+        if self.cmd_scene_execute:
+            await self.send(self.cmd_scene_execute[0], self.cmd_scene_execute[1])
         # Because of potential UDP buffer overruns (lots of messages are sent on
         # a scene change), data may be lost
         # therefore we need to wait for the scene change to finish
@@ -249,15 +251,19 @@ class MixerBase:
                     break
         if not address_data:
             address_data = self._mappings_reverse.get(address) or {}
-        print(f"Setting value for {address} to {value}")
+
+        if address_data.get("data_type", "") == "boolean_inverted":
+            value = not value
         if value is False:
             value = 0
         if value is True:
             value = 1
+        if "write_transform" in address_data:
+            value = getattr(utils, address_data["write_transform"])(value, address_data)
+            value = str(value)
         if address_data.get("mapping"):
             reverse_map = {v: k for k, v in address_data["mapping"].items()}
             value = reverse_map[value]
-        print(f"Setting2 value for {address} to {value}")            
         if address_data:
             await self.send(address_data["input"], value)
             await self.query(address_data["input"])
