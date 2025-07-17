@@ -16,14 +16,17 @@ class MixerTypeWING(MixerTypeBase):
     has_mono: bool = False
     num_head_amp: int = 1  # Set to 128 for real use
     num_mains: int = 4
-    info_address: str = "/WING?"
+    info_address: str = "/?"
     subscription_string: str = "/*s"
     subscription_renew_string: str = "/*s"
+
+    cmd_scene_load = "/$ctl/lib/$actionidx"
+    cmd_scene_execute = ["/$ctl/lib/$action", "GO"]
 
     def __init__(self, **kwargs):
         self.extra_addresses_to_load = [
             {
-                "input": "WING?",
+                "input": "/?",
                 "output": "/status",
             },
             # Channels

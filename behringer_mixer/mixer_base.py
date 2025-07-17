@@ -62,11 +62,10 @@ class MixerBase:
                 "Failed to setup OSC connection to mixer. Please check for correct ip address."
             )
             return False
-
         self.logger.debug(
             "Successfully connected to %s at %s.",
-            {self.info_response[2]},
-            {self.info_response[0]},
+            self._mixer_status.get("name"),
+            self._mixer_status.get("ip_address"),
         )
         return True
 
@@ -94,6 +93,9 @@ class MixerBase:
         updates = self._update_state(addr, data)
         if addr == "/xinfo":
             self.handle_xinfo(data)
+            updates = []
+        if addr == "/*":
+            self.handle_winfo(data)
             updates = []
         if self._callback_function:
             for row in updates:
@@ -193,12 +195,7 @@ class MixerBase:
             return []
         address_data = self._mappings.get(address, {})
         state_key = address_data.get("output")
-        print(f"Updating state for address: {address} with values: {values}")
-        print(f"values if of type: {type(values)}")
-        print(values)
         value = values[0] if len(values) == 1 else values
-        print(f"value if of type: {type(value)}")
-        print(value)
         updates = []
         if state_key:
             if "data_index" in address_data:
@@ -208,7 +205,6 @@ class MixerBase:
             if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
             if address_data.get("data_type", "") == "boolean_inverted":
-                print(f"Inverting boolean value: {value}")
                 value = not bool(value)
             self._state[state_key] = value
             updates.append({"property": state_key, "value": value})
@@ -253,6 +249,7 @@ class MixerBase:
                     break
         if not address_data:
             address_data = self._mappings_reverse.get(address) or {}
+        print(f"Setting value for {address} to {value}")
         if value is False:
             value = 0
         if value is True:
@@ -260,6 +257,7 @@ class MixerBase:
         if address_data.get("mapping"):
             reverse_map = {v: k for k, v in address_data["mapping"].items()}
             value = reverse_map[value]
+        print(f"Setting2 value for {address} to {value}")            
         if address_data:
             await self.send(address_data["input"], value)
             await self.query(address_data["input"])
@@ -321,6 +319,20 @@ class MixerBase:
             "name": data[1],
             "type": data[2],
             "firmware": data[3],
+        }
+
+    def handle_winfo(self, data: List[Any]) -> None:
+        """Handle the return data from /? requests.
+
+        Args:
+            data (List[Any]): The data received from the xinfo request.
+        """
+        values = data[0].split(",")
+        self._mixer_status = {
+            "ip_address": values[1],
+            "name": values[2],
+            "type": values[3],
+            "firmware": values[5],
         }
 
     def dump_mapping(self) -> List[Dict[str, str]]:
