@@ -198,6 +198,27 @@ class MixerTypeWING(MixerTypeBase):
                     },
                 },
             },
+            # Bus Mains Sends
+            {
+                "tag": "busmainsends",
+                "input": "/bus/{num_bus}/main{num_main}/on",
+                "input_padding": {"num_main": 1, "num_bus": 1},
+                "output": "/busmainsend/{num_bus}/{num_main}/mix_on",
+                "data_type": "boolean",
+            },
+            {
+                "tag": "busmainsends",
+                "input": "/bus/{num_bus}/main/{num_main}/lvl",
+                "input_padding": {"num_matrix": 1, "num_bus": 1},
+                "output": "/busmainsend/{num_bus}/{num_main}/mix_fader",
+                "write_transform": "fader_to_db",
+                "data_index": 1,
+                "secondary_output": {
+                    "_db": {
+                        "data_index": 0,
+                    },
+                },
+            },
             # Matrices
             {
                 "tag": "matrices",
