@@ -77,3 +77,30 @@ def db_to_linf(value, config):
         min = config["data_type_config"].get("min")
         max = config["data_type_config"].get("max")
     return (value - min) / (max - min)
+
+
+_wing_colors = [
+    "OFF",
+    "GRAY_BLUE",
+    "MEDIUM_BLUE",
+    "DARK_BLUE",
+    "TURQUOISE",
+    "GREEN",
+    "OLIVE_GREEN",
+    "YELLOW",
+    "ORANGE",
+    "RED",
+    "CORAL",
+    "PINK",
+    "MAUVE",
+]
+
+
+def wing_color_name_to_index(color_name: str, config) -> int:
+    """Convert color name to color index"""
+    return _wing_colors.index(color_name)
+
+
+def wing_color_index_to_name(color_index: int, config) -> str:
+    """Convert color index to color name"""
+    return _wing_colors[int(color_index)]

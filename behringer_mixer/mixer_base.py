@@ -55,18 +55,17 @@ class MixerBase:
 
     async def validate_connection(self):
         """Validate connection to the mixer"""
-        await self.send("/xinfo")
+        await self.send(self.info_address)
         await asyncio.sleep(self._CONNECT_TIMEOUT)
         if not self.info_response:
             self.logger.debug(
                 "Failed to setup OSC connection to mixer. Please check for correct ip address."
             )
             return False
-
         self.logger.debug(
             "Successfully connected to %s at %s.",
-            {self.info_response[2]},
-            {self.info_response[0]},
+            self._mixer_status.get("name"),
+            self._mixer_status.get("ip_address"),
         )
         return True
 
@@ -89,10 +88,14 @@ class MixerBase:
         """Handle callback response"""
 
         self.logger.debug(f"received: {addr} {data if data else ''}")
+        self.logger.debug(f"received: a={addr} d={data if data else ''}")
         self._last_received = time.time()
         updates = self._update_state(addr, data)
         if addr == "/xinfo":
             self.handle_xinfo(data)
+            updates = []
+        if addr == "/*":
+            self.handle_winfo(data)
             updates = []
         if self._callback_function:
             for row in updates:
@@ -114,20 +117,20 @@ class MixerBase:
 
     async def subscribe(self, callback_function):
         """run the subscribe worker"""
-        await self._subscribe_worker("/xremote", callback_function)
+        await self._subscribe_worker(self.subscription_string, callback_function)
 
     async def _subscribe_worker(self, parameter_string, callback_function):
         """Worker to handle subscription and renewal of OSC messages."""
         self._callback_function = callback_function
         await self.send(parameter_string)
-        renew_string = "/renew"
-        if parameter_string == "/xremote":
-            renew_string = "/xremote"
+        renew_string = self.subscription_renew_string
+        if parameter_string == self.subscription_string:
+            renew_string = self.subscription_string
         self._subscription_status_connection = True
         while self._callback_function:
             await asyncio.sleep(9)
             await self.send(renew_string)
-            await self.send("/xinfo")
+            await self.send(self.info_address)
             if self.subscription_connected() != self._subscription_status_connection:
                 self._subscription_status_connection = (
                     True if self.subscription_connected() else False
@@ -161,7 +164,9 @@ class MixerBase:
 
     async def load_scene(self, scene_number):
         """Load a new scene on the mixer"""
-        await self.send(self.cmd_scene_load, scene_number)
+        await self.send(self.cmd_scene_load, str(scene_number))
+        if self.cmd_scene_execute:
+            await self.send(self.cmd_scene_execute[0], self.cmd_scene_execute[1])
         # Because of potential UDP buffer overruns (lots of messages are sent on
         # a scene change), data may be lost
         # therefore we need to wait for the scene change to finish
@@ -195,21 +200,29 @@ class MixerBase:
         value = values[0] if len(values) == 1 else values
         updates = []
         if state_key:
+            if "data_index" in address_data:
+                value = values[address_data["data_index"]]
             if address_data.get("mapping"):
                 value = address_data["mapping"].get(value)
             if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
+            if address_data.get("data_type", "") == "boolean_inverted":
+                value = not bool(value)
             self._state[state_key] = value
             updates.append({"property": state_key, "value": value})
             for suffix, secondary_data in address_data.get(
                 "secondary_output", {}
             ).items():
                 secondary_key = state_key + suffix
-                new_value = getattr(utils, secondary_data["forward_function"])(
-                    value, address_data
-                )
-                self._state[secondary_key] = new_value
-                updates.append({"property": secondary_key, "value": new_value})
+                secondary_value = value
+                if "data_index" in secondary_data:
+                    secondary_value = values[secondary_data["data_index"]]
+                if "forward_function" in secondary_data:
+                    secondary_value = getattr(
+                        utils, secondary_data["forward_function"]
+                    )(secondary_value, address_data)
+                self._state[secondary_key] = secondary_value
+                updates.append({"property": secondary_key, "value": secondary_value})
         return updates
 
     def _build_reverse_mappings(self) -> None:
@@ -238,10 +251,16 @@ class MixerBase:
                     break
         if not address_data:
             address_data = self._mappings_reverse.get(address) or {}
+
+        if address_data.get("data_type", "") == "boolean_inverted":
+            value = not value
         if value is False:
             value = 0
         if value is True:
             value = 1
+        if "write_transform" in address_data:
+            value = getattr(utils, address_data["write_transform"])(value, address_data)
+            value = str(value)
         if address_data.get("mapping"):
             reverse_map = {v: k for k, v in address_data["mapping"].items()}
             value = reverse_map[value]
@@ -306,6 +325,20 @@ class MixerBase:
             "name": data[1],
             "type": data[2],
             "firmware": data[3],
+        }
+
+    def handle_winfo(self, data: List[Any]) -> None:
+        """Handle the return data from /? requests.
+
+        Args:
+            data (List[Any]): The data received from the xinfo request.
+        """
+        values = data[0].split(",")
+        self._mixer_status = {
+            "ip_address": values[1],
+            "name": values[2],
+            "type": values[3],
+            "firmware": values[5],
         }
 
     def dump_mapping(self) -> List[Dict[str, str]]:
