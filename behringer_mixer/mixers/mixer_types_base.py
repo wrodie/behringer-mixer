@@ -17,6 +17,7 @@ class MixerTypeBase(MixerBase):
     num_scenes: int = 100
     num_head_amp: int = 0
     has_mono: bool = False
+    num_mains: int = 1
     info_address: str = "/xinfo"
     subscription_string: str = "/xremote"
     subscription_renew_string: str = "/renew"
@@ -68,9 +69,17 @@ class MixerTypeBase(MixerBase):
                 "number": 0,
                 "base_address": "bussend",
             },
+            "bus_mainsends": {
+                "number": 0,
+                "base_address": "busmainsend",
+            },
             "head_amps": {
                 "number": self.num_head_amp,
                 "base_address": "headamp",
+            },
+            "mains": {
+                "number": self.num_mains,
+                "base_address": "main",
             },
             "has_mono": self.has_mono,
         }

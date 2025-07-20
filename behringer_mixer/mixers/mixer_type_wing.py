@@ -6,15 +6,15 @@ class MixerTypeWING(MixerTypeBase):
 
     port_number: int = 2223
     mixer_type: str = "WING"
-    num_channel: int = 48  # Set to 48 for real use
-    num_bus: int = 16  # Set to 16 for real use
-    num_dca: int = 16  # Set to 8 or 16 for real use
-    num_fx: int = 8
-    num_auxin: int = 8  # Set to 8 for real use
-    num_auxrtn: int = 0  # Set to 8 for real use
-    num_matrix: int = 8  # Set to 8 for real use
+    num_channel: int = 48
+    num_bus: int = 16
+    num_dca: int = 16
+    num_fx: int = 0
+    num_auxin: int = 8
+    num_auxrtn: int = 0
+    num_matrix: int = 8
     has_mono: bool = False
-    num_head_amp: int = 0  # Set to 128 for real use
+    num_head_amp: int = 0
     num_mains: int = 4
     info_address: str = "/?"
     subscription_string: str = "/*s"
@@ -184,6 +184,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {"num_matrix": 1, "num_bus": 1},
                 "output": "/bussend/{num_bus}/{num_matrix}/mix_on",
                 "data_type": "boolean",
+                "data_index": 2,
             },
             {
                 "tag": "bussends",
@@ -201,16 +202,17 @@ class MixerTypeWING(MixerTypeBase):
             # Bus Mains Sends
             {
                 "tag": "busmainsends",
-                "input": "/bus/{num_bus}/main{num_main}/on",
-                "input_padding": {"num_main": 1, "num_bus": 1},
-                "output": "/busmainsend/{num_bus}/{num_main}/mix_on",
+                "input": "/bus/{num_bus}/main/{num_mains}/on",
+                "input_padding": {"num_mains": 1, "num_bus": 1},
+                "output": "/busmainsend/{num_bus}/{num_mains}/mix_on",
                 "data_type": "boolean",
+                "data_index": 2,
             },
             {
                 "tag": "busmainsends",
-                "input": "/bus/{num_bus}/main/{num_main}/lvl",
-                "input_padding": {"num_matrix": 1, "num_bus": 1},
-                "output": "/busmainsend/{num_bus}/{num_main}/mix_fader",
+                "input": "/bus/{num_bus}/main/{num_mains}/lvl",
+                "input_padding": {"num_mains": 1, "num_bus": 1},
+                "output": "/busmainsend/{num_bus}/{num_mains}/mix_fader",
                 "write_transform": "fader_to_db",
                 "data_index": 1,
                 "secondary_output": {
@@ -239,6 +241,7 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/mtx/{num_matrix}/mix_on",
                 "input_padding": {"num_matrix": 1},
                 "data_type": "boolean_inverted",
+                "data_index": 2,
             },
             {
                 "tag": "matrices",
@@ -267,7 +270,7 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/dca/{num_dca}/mix_fader",
                 "write_transform": "fader_to_db",
                 "input_padding": {"num_dca": 1},
-                "data_index": 1,
+                "data_index": 2,
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -278,6 +281,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "dcas",
                 "input": "/dca/{num_dca}/mute",
                 "output": "/dca/{num_dca}/mix_on",
+                "data_index": 0,
                 "data_type": "boolean_inverted",
                 "input_padding": {"num_dca": 1},
             },
@@ -320,6 +324,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/main/{num_mains}/mute",
                 "output": "/main/{num_mains}/mix_on",
                 "input_padding": {"num_mains": 1},
+                "data_index": 2,
                 "data_type": "boolean_inverted",
             },
             {
