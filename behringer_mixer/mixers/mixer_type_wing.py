@@ -1,4 +1,4 @@
-from .mixer_types_base import MixerTypeBase
+from .mixer_type_base import MixerTypeBase
 
 
 class MixerTypeWING(MixerTypeBase):

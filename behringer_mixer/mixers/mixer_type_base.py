@@ -25,6 +25,7 @@ class MixerTypeBase(MixerBase):
     addresses_to_load = []
 
     cmd_scene_load = "/-action/goscene"
+    cmd_scene_execute = None
 
     def info(self):
         """Return information about the mixer"""

@@ -1,4 +1,4 @@
-from .mixer_types_xseries_base import MixerTypeXSeriesBase
+from .mixer_type_xseries_base import MixerTypeXSeriesBase
 
 
 class MixerTypeXAir(MixerTypeXSeriesBase):

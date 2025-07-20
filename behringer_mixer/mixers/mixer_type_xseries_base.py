@@ -1,7 +1,7 @@
-from ..mixer_base import MixerBase
+from .mixer_type_base import MixerTypeBase
 
 
-class MixerTypeXSeriesBase(MixerBase):
+class MixerTypeXSeriesBase(MixerTypeBase):
     """Base class for mixer type configuration"""
 
     mixer_type: str = ""

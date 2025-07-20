@@ -20,7 +20,7 @@ It also supports
 - Firmware version
 - Control of head-amps gain/phantom power
 
-If you want a module that allows you to control the full functionality of the mixer, eg configuring effects/eq etc then I would recommend checking out https://github.com/onyx-and-iris/xair-api-python instead.
+If you want a module that allows you to control the full functionality of the mixer, eg configuring effects/eq etc then I would recommend checking out https://github.com/onyx-and-iris/xair-api-python instead. Or if you have a focus on the X-Series, you could also look at https://github.com/matiasbarrios/magical-mixers/.
 
 ## Prerequisites
 
@@ -71,6 +71,7 @@ The code is written to support the following mixer types:
 - `XR18`
 - `XR16`
 - `XR12`
+- `WING`
 
 The following keyword arguments may be passed:
 
@@ -85,6 +86,7 @@ The following keyword arguments may be passed:
     - `auxins`
     - `busses`
     - `bussends`
+    - `busmainsends`
     - `matrices`
     - `dcas`
     - `headamps`
@@ -221,6 +223,17 @@ Stops the module listening to real time updates
 #### async `mixer.validate_connection()`
 Returns `True` if the connection to the mixer is successful, `False` otherwise.
 
+## Caveats
+### Behringer Wing Support
+Behringer Wing support is new and the Wing is quite different to how the other X/M/X series mixers work. Not all the functionality of the the other mixers is supported with the wing currently:
+ - No Headamp support
+ - No USB recorder support - USB player is supported
+ - Bus->Bus send controls (Bus to Matrix/Main is supported)
+
+I don't believe any of these are impossible to achieve, just because they are tricker and I haven't put in the time yet.  I'm not even sure if they are needed.
+
+**WARNING** - This module makes use of OSC subscription to get updated values of controls.  Differently to the X-Series mixers the Wing only supports one client to receive this data at a time.  So this means if you are using another integration that makes use of this same OSC subscription on the mixer, eg [Bitfocus Companion](https://bitfocus.io/companion), then they will compete for the same connection and both won't work properly.  I believe other software such as Wing Edit/WingQ/Mixing Station make use of a different protocol and don't suffer with this problem.
+
 
 ## Tests
 
@@ -242,6 +255,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 [X32 OSC Commands](https://wiki.munichmakerlab.de/images/1/17/UNOFFICIAL_X32_OSC_REMOTE_PROTOCOL_%281%29.pdf)
 
+[Wing OSC Commands](https://wing-docs.com/pdf/OSC_Documentation.pdf)
 ## Special Thanks
 
 [Onyx-and-Iris](https://github.com/onyx-and-iris) for writing the XAir Python module
