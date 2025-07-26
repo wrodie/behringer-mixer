@@ -256,6 +256,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [X32 OSC Commands](https://wiki.munichmakerlab.de/images/1/17/UNOFFICIAL_X32_OSC_REMOTE_PROTOCOL_%281%29.pdf)
 
 [Wing OSC Commands](https://wing-docs.com/pdf/OSC_Documentation.pdf)
+
+[Patrick-Gilles Maillot](https://sites.google.com/site/patrickmaillot/wing)
 ## Special Thanks
 
 [Onyx-and-Iris](https://github.com/onyx-and-iris) for writing the XAir Python module

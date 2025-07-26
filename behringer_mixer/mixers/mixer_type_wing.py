@@ -188,7 +188,7 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "bussends",
-                "input": "/bus/{num_bus}/mix/MX{num_matrix}/lvl",
+                "input": "/bus/{num_bus}/send/MX{num_matrix}/lvl",
                 "input_padding": {"num_matrix": 1, "num_bus": 1},
                 "output": "/bussend/{num_bus}/{num_matrix}/mix_fader",
                 "write_transform": "fader_to_db",
