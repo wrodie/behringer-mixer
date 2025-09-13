@@ -16,6 +16,7 @@ class MixerTypeWING(MixerTypeBase):
     has_mono: bool = False
     num_head_amp: int = 0
     num_mains: int = 4
+    num_mute_groups: int = 8
     info_address: str = "/?"
     subscription_string: str = "/*s"
     subscription_renew_string: str = "/*s"
@@ -49,11 +50,17 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "channels",
                 "input": "/ch/{num_channel}/mute",
                 "output": "/ch/{num_channel}/mix_on",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "data_type": "boolean_inverted",
                 "data_index": 2,
             },
             {
                 "tag": "channels",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "input": "/ch/{num_channel}/$name",
                 "output": "/ch/{num_channel}/config_name",
             },
@@ -61,6 +68,9 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "channels",
                 "input": "/ch/{num_channel}/$col",
                 "output": "/ch/{num_channel}/config_color",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "data_index": 0,
                 "secondary_output": {
                     "_name": {
@@ -77,6 +87,7 @@ class MixerTypeWING(MixerTypeBase):
                 "data_index": 2,
                 "input_padding": {
                     "num_bus": 1,
+                    "num_channel": 1,
                 },
                 "write_transform": "fader_to_db",
                 "output": "/chsend/{num_channel}/{num_bus}/mix_on",
@@ -382,6 +393,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "usb",
                 "input": "/play/$actfile",
                 "output": "/usb/file",
+            },
+            # Mute Groups
+            {
+                "tag": "mutegroups",
+                "input": "/mgrp/{num_mute_groups}/mute",
+                "output": "/mutegroups/{num_mute_groups}/on",
+                "data_type": "boolean",
+                "data_index": 2,
             },
         ]
 

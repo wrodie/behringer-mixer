@@ -11,3 +11,4 @@ class MixerTypeXR18(MixerTypeXAir):
     num_fx: int = 4
     num_auxrtn: int = 2
     num_head_amp: int = 16
+    num_mute_groups: int = 4

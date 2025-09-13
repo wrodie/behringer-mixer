@@ -10,3 +10,4 @@ class MixerTypeXR16(MixerTypeXAir):
     num_dca: int = 4
     num_fx: int = 4
     num_head_amp: int = 8
+    num_mute_groups: int = 4

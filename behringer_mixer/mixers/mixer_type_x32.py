@@ -13,6 +13,7 @@ class MixerTypeX32(MixerTypeXSeriesBase):
     num_auxrtn: int = 8
     num_matrix: int = 6
     has_mono: bool = True
+    num_mute_groups: int = 6
     num_head_amp: int = 128
 
     def __init__(self, **kwargs):
@@ -50,6 +51,13 @@ class MixerTypeX32(MixerTypeXSeriesBase):
                         "reverse_function": "color_name_to_index",
                     },
                 },
+            },
+            # Mute Groups
+            {
+                "tag": "mutegroups",
+                "input": "/config/mute/{num_mute_groups}",
+                "output": "/mutegroups/{num_mute_groups}/on",
+                "data_type": "boolean",
             },
         ]
         super().__init__(**kwargs)
