@@ -52,12 +52,19 @@ class MixerTypeX32(MixerTypeXSeriesBase):
                     },
                 },
             },
-            # Mute Groups
+            # X USB Settings
             {
-                "tag": "mutegroups",
-                "input": "/config/mute/{num_mute_groups}",
-                "output": "/mutegroups/{num_mute_groups}/on",
-                "data_type": "boolean",
+                "tag": "cards",
+                "input": "/-prefs/card/USBmode",
+                "output": "/config/cards/XUSBmode",
+                "mapping": {
+                    0: "32in/32out",
+                    1: "16in/16out",
+                    2: "32in/8out",
+                    3: "8in/32out",
+                    4: "8in/8out",
+                    5: "2in/2out",
+                },
             },
         ]
         super().__init__(**kwargs)

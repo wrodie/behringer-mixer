@@ -73,12 +73,5 @@ class MixerTypeXAir(MixerTypeXSeriesBase):
                 },
                 "data_type": "boolean",
             },
-            # Mute Groups
-            {
-                "tag": "mutegroups",
-                "input": "/config/mute/{num_mute_groups}",
-                "output": "/mutegroups/{num_mute_groups}/on",
-                "data_type": "boolean",
-            },
         ]
         super().__init__(**kwargs)
