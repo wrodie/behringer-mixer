@@ -16,6 +16,7 @@ class MixerTypeBase(MixerBase):
     num_matrix: int = 0
     num_scenes: int = 100
     num_head_amp: int = 0
+    num_mute_groups: int = 0
     has_mono: bool = False
     num_mains: int = 1
     info_address: str = "/xinfo"
@@ -81,6 +82,10 @@ class MixerTypeBase(MixerBase):
             "mains": {
                 "number": self.num_mains,
                 "base_address": "main",
+            },
+            "mute_groups": {
+                "number": self.num_mute_groups,
+                "base_address": "mutegroups",
             },
             "has_mono": self.has_mono,
         }

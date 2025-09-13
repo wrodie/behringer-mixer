@@ -1,5 +1,5 @@
 # behringer-mixer
-Python module to get basic information from Behringer digital mixers eg X32/XAir etc.
+Python module to get basic information from Behringer digital mixers eg X32/Wing/XAir etc.
 
 Initial inspiration (and some code) comes from https://github.com/onyx-and-iris/xair-api-python.
 
@@ -19,6 +19,7 @@ It also supports
 - Current USB Filename [get]
 - Firmware version
 - Control of head-amps gain/phantom power
+- Mute groups
 
 If you want a module that allows you to control the full functionality of the mixer, eg configuring effects/eq etc then I would recommend checking out https://github.com/onyx-and-iris/xair-api-python instead. Or if you have a focus on the X-Series, you could also look at https://github.com/matiasbarrios/magical-mixers/.
 
@@ -94,6 +95,7 @@ The following keyword arguments may be passed:
     - `mono`
     - `show`
     - `usb`
+    - `mutegroups`
 
 The create function only creates an instance of the mixer, it does not 'connect' to it.
 You should call the `mixer.start()` function to prepare communication and then call `mixer.validate_connection()` to check that the connection to the mixer worked.

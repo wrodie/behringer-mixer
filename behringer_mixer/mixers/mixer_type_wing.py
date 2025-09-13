@@ -16,6 +16,7 @@ class MixerTypeWING(MixerTypeBase):
     has_mono: bool = False
     num_head_amp: int = 0
     num_mains: int = 4
+    num_mute_groups: int = 8
     info_address: str = "/?"
     subscription_string: str = "/*s"
     subscription_renew_string: str = "/*s"
@@ -382,6 +383,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "usb",
                 "input": "/play/$actfile",
                 "output": "/usb/file",
+            },
+            # Mute Groups
+            {
+                "tag": "mutegroups",
+                "input": "/mgrp/{num_mute_groups}/mute",
+                "output": "/mutegroups/{num_mute_groups}/on",
+                "data_type": "boolean",
+                "data_index": 2,
             },
         ]
 
