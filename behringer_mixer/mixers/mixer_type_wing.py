@@ -50,11 +50,17 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "channels",
                 "input": "/ch/{num_channel}/mute",
                 "output": "/ch/{num_channel}/mix_on",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "data_type": "boolean_inverted",
                 "data_index": 2,
             },
             {
                 "tag": "channels",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "input": "/ch/{num_channel}/$name",
                 "output": "/ch/{num_channel}/config_name",
             },
@@ -62,6 +68,9 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "channels",
                 "input": "/ch/{num_channel}/$col",
                 "output": "/ch/{num_channel}/config_color",
+                "input_padding": {
+                    "num_channel": 1,
+                },
                 "data_index": 0,
                 "secondary_output": {
                     "_name": {
@@ -78,6 +87,7 @@ class MixerTypeWING(MixerTypeBase):
                 "data_index": 2,
                 "input_padding": {
                     "num_bus": 1,
+                    "num_channel": 1,
                 },
                 "write_transform": "fader_to_db",
                 "output": "/chsend/{num_channel}/{num_bus}/mix_on",
