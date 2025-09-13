@@ -342,6 +342,13 @@ class MixerTypeXSeriesBase(MixerTypeBase):
             "input": "/-stat/usbmounted",
             "output": "/usb/mounted",
         },
+        # Mute Groups
+        {
+            "tag": "mutegroups",
+            "input": "/config/mute/{num_mute_groups}",
+            "output": "/mutegroups/{num_mute_groups}/on",
+            "data_type": "boolean",
+        },
     ]
 
     cmd_scene_load = "/-action/goscene"
