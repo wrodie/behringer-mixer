@@ -35,8 +35,11 @@ class MixerBase:
         self.ip = kwargs.get("ip")
         self.port = kwargs.get("port") or self.port_number
         self._delay = kwargs.get("delay", 0) if "delay" in kwargs else self.delay
-        self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(kwargs.get("logLevel") or logging.WARNING)
+        if kwargs.get("logger"):
+            self.logger = kwargs.get("logger")
+        else:
+            self.logger.addHandler(logging.StreamHandler())
+            self.logger.setLevel(kwargs.get("logLevel") or logging.WARNING)
         self.include = kwargs.get("include") or []
         if not self.ip:
             raise MixerError("No valid ip detected")
