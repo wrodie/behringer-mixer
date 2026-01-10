@@ -281,7 +281,7 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/dca/{num_dca}/mix_fader",
                 "write_transform": "fader_to_db",
                 "input_padding": {"num_dca": 1},
-                "data_index": 2,
+                "data_index": 1,
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -292,7 +292,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "dcas",
                 "input": "/dca/{num_dca}/mute",
                 "output": "/dca/{num_dca}/mix_on",
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean_inverted",
                 "input_padding": {"num_dca": 1},
             },
