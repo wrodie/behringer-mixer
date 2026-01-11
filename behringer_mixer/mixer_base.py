@@ -97,7 +97,9 @@ class MixerBase:
         if addr == "/xinfo":
             self.handle_xinfo(data)
             updates = []
-        if addr == "/*":
+        # WING responds to the info query ("/?") with either "/*" or "/?" depending
+        # on firmware / implementation.
+        if addr in ("/*", "/?"):
             self.handle_winfo(data)
             updates = []
         if self._callback_function:
