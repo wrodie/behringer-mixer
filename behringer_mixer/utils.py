@@ -82,6 +82,7 @@ def db_to_linf(value, config):
 _wing_colors = [
     # WING color indices per remote protocol appendix:
     # 1..12 map to the names below; we additionally keep "OFF" at index 0.
+    # Newer firmware/tooling exposes additional indices; we include known values up to 18.
     "OFF",
     "GRAY_BLUE",
     "MEDIUM_BLUE",
@@ -90,14 +91,18 @@ _wing_colors = [
     "GREEN",
     "OLIVE_GREEN",
     "YELLOW",
-    "ORANGE",
+    "BROWN",
     "RED",
     "CORAL",
-    "PINK",
-    "MAUVE",
+    "MAGENTA",
+    "PURPLE",
+    "ORANGE",
+    "LIGHT_BLUE",
+    "SALMON",
+    "TEAL",
+    "DARK_GRAY",
+    "LIGHT_GRAY",
 ]
-
-
 
 
 def wing_color_name_to_index(color_name: str, config) -> int:
