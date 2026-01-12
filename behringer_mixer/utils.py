@@ -130,3 +130,30 @@ def wing_color_index_to_name(color_index: int, config) -> str:
         return _wing_colors[idx]
 
     return f"COLOR_{idx}"
+
+
+def float_to_db(value, config):
+    """Pass-through conversion for values that are already in dB."""
+    return value
+
+
+def db_to_float(value, config):
+    """Inverse of float_to_db (pass-through)."""
+    return value
+
+
+def wing_headamp_gain_db_to_float(value, config):
+    """Normalize WING headamp gain values.
+
+    Per WING OSC documentation, local headamp gain is a float with range
+    -3.0 .. 45.5 dB in 98 discrete steps (0.5 dB increments).
+    """
+    try:
+        gain_db = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid headamp gain value: {value!r}")
+
+    gain_db = max(-3.0, min(45.5, gain_db))
+    gain_db = round(gain_db * 2.0) / 2.0
+    gain_db = max(-3.0, min(45.5, gain_db))
+    return gain_db
