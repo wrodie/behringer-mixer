@@ -97,11 +97,14 @@ class MixerBase:
         if addr == "/xinfo":
             self.handle_xinfo(data)
             updates = []
-        # WING responds to the info query ("/?") with either "/*" or "/?" depending
-        # on firmware / implementation.
-        if addr in ("/*", "/?"):
-            self.handle_winfo(data)
-            updates = []
+        # WING responds to the info query ("/?") with either "/?" or "/*" depending on firmwaren. 
+        # Note: "/*" is also used for generic ACK/error strings (e.g. OK, NODE NOT FOUND).
+        if addr in ("/*", "/?") and data and isinstance(data[0], str):
+            if data[0].startswith("WING,"):
+                self.handle_winfo(data)
+                # Mirror the parsed mixer status into the state map.
+                self._state["/status"] = dict(self._mixer_status)
+                updates = [{"property": "/status", "value": self._state["/status"]}]
         if self._callback_function:
             for row in updates:
                 self._callback_function(row)
@@ -207,8 +210,29 @@ class MixerBase:
         if state_key:
             if "data_index" in address_data:
                 value = values[address_data["data_index"]]
-            if address_data.get("mapping"):
-                value = address_data["mapping"].get(value)
+            mapping = address_data.get("mapping")
+            if mapping:
+                try:
+                    value = mapping.get(value)
+                except TypeError:
+                    pass
+            if address_data.get("data_type", "") == "int":
+                # WING often returns numbers as strings (e.g. "7").
+                # Guard for list/tuple payloads and unknown types.
+                scalar: Any = value
+                if isinstance(value, (list, tuple)):
+                    scalar = value[0] if value else None
+
+                if isinstance(scalar, bool):
+                    # Avoid True/False becoming 1/0 unless explicitly intended.
+                    pass
+                elif isinstance(scalar, (int, float)):
+                    value = int(scalar)
+                elif isinstance(scalar, str):
+                    try:
+                        value = int(float(scalar))
+                    except ValueError:
+                        pass
             if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
             if address_data.get("data_type", "") == "boolean_inverted":
@@ -338,7 +362,14 @@ class MixerBase:
         Args:
             data (List[Any]): The data received from the xinfo request.
         """
+        if not data or not isinstance(data[0], str):
+            return
+
         values = data[0].split(",")
+        # Expected: WING,<ip>,<name>,<type>,<serial>,<firmware>,...
+        if len(values) < 6 or values[0] != "WING":
+            return
+
         self._mixer_status = {
             "ip_address": values[1],
             "name": values[2],

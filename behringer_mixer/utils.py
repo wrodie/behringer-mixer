@@ -80,10 +80,9 @@ def db_to_linf(value, config):
 
 
 _wing_colors = [
-    # WING color indices per remote protocol appendix:
-    # 1..12 map to the names below; we additionally keep "OFF" at index 0.
-    # Newer firmware/tooling exposes additional indices; we include known values up to 18.
-    "OFF",
+    # WING firmware >= 3.1 exposes 18 colors.
+    # OSC returns (string, normalized, int) where the string value is 1-based.
+    # 0-based list of the 18 color names, convert at the boundary.
     "GRAY_BLUE",
     "MEDIUM_BLUE",
     "DARK_BLUE",
@@ -107,12 +106,15 @@ _wing_colors = [
 
 def wing_color_name_to_index(color_name: str, config) -> int:
     """Convert color name to color index"""
+    if color_name == "OFF":
+        return 0
     if color_name in _wing_colors:
-        return _wing_colors.index(color_name)
+        return _wing_colors.index(color_name) + 1
     # Allow round-tripping unknown indices exposed as strings (e.g. "COLOR_14").
     if isinstance(color_name, str) and color_name.startswith("COLOR_"):
         suffix = color_name.removeprefix("COLOR_")
         try:
+            # Treat this as an external 1-based index.
             return int(suffix)
         except ValueError as err:
             raise ValueError(f"Invalid WING color name: {color_name}") from err
@@ -122,12 +124,17 @@ def wing_color_name_to_index(color_name: str, config) -> int:
 def wing_color_index_to_name(color_index: int, config) -> str:
     """Convert color index to color name"""
     try:
-        idx = int(color_index)
+        idx = int(float(color_index))
     except (TypeError, ValueError):
         return "UNKNOWN"
 
-    if 0 <= idx < len(_wing_colors):
-        return _wing_colors[idx]
+    if idx == 0:
+        return "OFF"
+
+    # External is 1-based; convert to internal 0-based.
+    idx0 = idx - 1
+    if 0 <= idx0 < len(_wing_colors):
+        return _wing_colors[idx0]
 
     return f"COLOR_{idx}"
 

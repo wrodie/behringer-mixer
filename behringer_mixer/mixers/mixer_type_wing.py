@@ -1,3 +1,68 @@
+"""Behringer WING OSC mapping notes (field findings + protocol quirks)
+
+The notes below are based on:
+- The Behringer WING remote protocol documentation (the PDF is partially outdated on a few points).
+- Multiple live tests against a real console.
+
+1) `/name` vs `/$name` (and `.../name` writeability)
+    - Use `/.../name` for both reads and writes.
+    - The `/$name` endpoints may respond to reads, but they are not reliably writable
+      (they behave like "read-only / linked" reflection).
+    - Our mapping outputs use `/.../config_name` (library-level key), with input set to `/.../name`.
+    - Practical length limits (observed):
+        - Most strips: 16 chars
+        - DCA: 8 chars
+
+2) `/col` vs `/$col` (and `/col` reply payload format)
+    - Use `/.../col` for both reads and writes.
+    - The `/$col` endpoints behave like the `/$name` ones: reads may work, writes are unreliable.
+    - Important: WING’s reply to `/.../col` is *multi-value*. Example payload observed:
+         ('9', 0.47058823529411764, 8)
+      Interpreted as:
+        - element[0]: 1-based color index as a STRING ("1".."18")
+        - element[1]: normalized float (approximately (idx-1)/17)
+        - element[2]: 0-based index as int (idx-1)
+    - For stable round-tripping we store the external 1-based index from element[0]
+      (`data_type: int`, `data_index: 0`).
+    - The OSC stack sometimes delivers numeric values as strings!
+
+3) Color count: documentation says 12, firmware >= 3.1 exposes 18
+    - We treat indices as:
+        - 1..18 for named colors
+        - 0 as OFF/none (seen on some objects)
+    - Name<->index helpers (`wing_color_*`) are implemented for 18 colors. Unknown values
+      round-trip as "COLOR_<n>".
+
+4) Color writeability can be object-dependent
+    - On the tested console, channel/aux/bus/main/matrix colors were writable.
+    - DCA and some headamp color endpoints appeared to ignore writes.
+
+5) Headamps: local (LCL) and AES50 (A/B/C)
+    - Local headamps are addressed via `/io/in/LCL/<n>/...`.
+    - AES50 headamps are addressed via `/io/in/A|B|C/<n>/...`.
+    - We expose them as library keys:
+        - gain:    `/headamp/<n>/gain` (LCL) and `/headamp/a|b|c/<n>/gain` (AES)
+        - phantom: `/headamp/<n>/phantom` and `/headamp/a|b|c/<n>/phantom`
+        - name:    `/headamp/.../config_name`
+        - color:   `/headamp/.../config_color`
+    - Phantom (`.../vph`) was writable and read back reliably.
+    - Gain writes are frequently ignored/locked depending on headamp ownership, source selection,
+      or "remote enable"/lock settings, or maybe just not functional like this.
+      TODO: Need to check if we just should use e.g.: /ch/*/in/set/$g instead / additionally.
+
+6) Sends and “self-sends”
+    - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
+
+7) `/status` is synthetic
+    - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
+    - `/status` is not a real writable OSC endpoint.
+
+8) Conditional endpoints (USB recorder, show/library)
+    - Some `/usb/rec/*` and show/library endpoints are conditional on media/show state and may
+      time out even if the mapping is correct (e.g. `/usb/rec/path` when no medium is present).
+      TODO: Deep dive into which endpoints are always available vs conditional.
+"""
+
 from .mixer_type_base import MixerTypeBase
 
 
@@ -64,17 +129,18 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "input": "/ch/{num_channel}/$name",
+                "input": "/ch/{num_channel}/name",
                 "output": "/ch/{num_channel}/config_name",
             },
             {
                 "tag": "channels",
-                "input": "/ch/{num_channel}/$col",
+                "input": "/ch/{num_channel}/col",
                 "output": "/ch/{num_channel}/config_color",
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -91,7 +157,6 @@ class MixerTypeWING(MixerTypeBase):
                     "num_bus": 1,
                     "num_channel": 1,
                 },
-                "write_transform": "fader_to_db",
                 "output": "/chsend/{num_channel}/{num_bus}/mix_on",
                 "data_type": "boolean",
             },
@@ -134,7 +199,7 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "auxins",
-                "input": "/aux/{num_auxin}/$name",
+                "input": "/aux/{num_auxin}/name",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_name",
             },
@@ -143,7 +208,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/aux/{num_auxin}/col",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_color",
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -175,16 +241,17 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "busses",
-                "input": "/bus/{num_bus}/$name",
+                "input": "/bus/{num_bus}/name",
                 "output": "/bus/{num_bus}/config_name",
                 "input_padding": {"num_bus": 1},
             },
             {
                 "tag": "busses",
-                "input": "/bus/{num_bus}/$col",
+                "input": "/bus/{num_bus}/col",
                 "output": "/bus/{num_bus}/config_color",
                 "input_padding": {"num_bus": 1},
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -219,36 +286,6 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/bus/{num_bus}/send/MX{num_matrix}/pre",
                 "input_padding": {"num_matrix": 1, "num_bus": 1},
                 "output": "/bussend/{num_bus}/{num_matrix}/pre",
-                "data_type": "boolean",
-                "data_index": 2,
-            },
-            # Bus -> Bus Sends (WING allows self-sends)
-            {
-                "tag": "busbussends",
-                "input": "/bus/{num_bus}/send/{num_bus_send}/on",
-                "input_padding": {"num_bus": 1, "num_bus_send": 1},
-                "output": "/busbussend/{num_bus}/{num_bus_send}/mix_on",
-                "data_type": "boolean",
-                "data_index": 2,
-            },
-            {
-                "tag": "busbussends",
-                "input": "/bus/{num_bus}/send/{num_bus_send}/lvl",
-                "input_padding": {"num_bus": 1, "num_bus_send": 1},
-                "output": "/busbussend/{num_bus}/{num_bus_send}/mix_fader",
-                "write_transform": "fader_to_db",
-                "data_index": 1,
-                "secondary_output": {
-                    "_db": {
-                        "data_index": 0,
-                    },
-                },
-            },
-            {
-                "tag": "busbussends",
-                "input": "/bus/{num_bus}/send/{num_bus_send}/pre",
-                "input_padding": {"num_bus": 1, "num_bus_send": 1},
-                "output": "/busbussend/{num_bus}/{num_bus_send}/pre",
                 "data_type": "boolean",
                 "data_index": 2,
             },
@@ -306,16 +343,17 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "matrices",
-                "input": "/mtx/{num_matrix}/$name",
+                "input": "/mtx/{num_matrix}/name",
                 "output": "/mtx/{num_matrix}/config_name",
                 "input_padding": {"num_matrix": 1},
             },
             {
                 "tag": "matrices",
-                "input": "/mtx/{num_matrix}/$col",
+                "input": "/mtx/{num_matrix}/col",
                 "output": "/mtx/{num_matrix}/config_color",
                 "input_padding": {"num_matrix": 1},
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -356,7 +394,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/dca/{num_dca}/col",
                 "output": "/dca/{num_dca}/config_color",
                 "input_padding": {"num_dca": 1},
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -388,16 +427,17 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "mains",
-                "input": "/main/{num_mains}/$name",
+                "input": "/main/{num_mains}/name",
                 "output": "/main/{num_mains}/config_name",
                 "input_padding": {"num_mains": 1},
             },
             {
                 "tag": "mains",
-                "input": "/main/{num_mains}/$col",
+                "input": "/main/{num_mains}/col",
                 "output": "/main/{num_mains}/config_color",
                 "input_padding": {"num_mains": 1},
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -513,16 +553,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "headamps",
                 "input": "/io/in/LCL/{num_head_amp}/g",
                 "output": "/headamp/{num_head_amp}/gain",
-                "input_padding": {
-                    "num_head_amp": 1,
-                },
-                "write_transform": "wing_headamp_gain_db_to_float",
                 "data_index": 2,
                 "secondary_output": {
                     "_db": {
-                        "forward_function": "float_to_db",
-                        "reverse_function": "db_to_float",
+                        "data_index": 0,
                     },
+                },
+                "input_padding": {
+                    "num_head_amp": 1,
                 },
             },
             {
@@ -550,7 +588,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_head_amp": 1,
                 },
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -564,16 +603,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "headamps",
                 "input": "/io/in/A/{num_aes50_in}/g",
                 "output": "/headamp/a/{num_aes50_in}/gain",
-                "input_padding": {
-                    "num_aes50_in": 1,
-                },
-                "write_transform": "wing_headamp_gain_db_to_float",
                 "data_index": 2,
                 "secondary_output": {
                     "_db": {
-                        "forward_function": "float_to_db",
-                        "reverse_function": "db_to_float",
+                        "data_index": 0,
                     },
+                },
+                "input_padding": {
+                    "num_aes50_in": 1,
                 },
             },
             {
@@ -601,7 +638,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_aes50_in": 1,
                 },
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -613,16 +651,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "headamps",
                 "input": "/io/in/B/{num_aes50_in}/g",
                 "output": "/headamp/b/{num_aes50_in}/gain",
-                "input_padding": {
-                    "num_aes50_in": 1,
-                },
-                "write_transform": "wing_headamp_gain_db_to_float",
                 "data_index": 2,
                 "secondary_output": {
                     "_db": {
-                        "forward_function": "float_to_db",
-                        "reverse_function": "db_to_float",
+                        "data_index": 0,
                     },
+                },
+                "input_padding": {
+                    "num_aes50_in": 1,
                 },
             },
             {
@@ -650,7 +686,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_aes50_in": 1,
                 },
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -662,16 +699,14 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "headamps",
                 "input": "/io/in/C/{num_aes50_in}/g",
                 "output": "/headamp/c/{num_aes50_in}/gain",
-                "input_padding": {
-                    "num_aes50_in": 1,
-                },
-                "write_transform": "wing_headamp_gain_db_to_float",
                 "data_index": 2,
                 "secondary_output": {
                     "_db": {
-                        "forward_function": "float_to_db",
-                        "reverse_function": "db_to_float",
+                        "data_index": 0,
                     },
+                },
+                "input_padding": {
+                    "num_aes50_in": 1,
                 },
             },
             {
@@ -699,7 +734,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_aes50_in": 1,
                 },
-                "data_index": 2,
+                "data_type": "int",
+                "data_index": 0,
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -708,5 +744,38 @@ class MixerTypeWING(MixerTypeBase):
                 },
             },
         ]
+        # Bus -> Bus Sends
+        # Note: Sending bus 'n' to bus 'n' is NOT possible and is ignored.
+        # bus->bus send mappings without self-sends.
+        for bus in range(1, self.num_bus + 1):
+            for send in range(1, self.num_bus_send + 1):
+                if send == bus:
+                    continue
+                self.extra_addresses_to_load.extend(
+                    [
+                        {
+                            "tag": "busbussends",
+                            "input": f"/bus/{bus}/send/{send}/on",
+                            "output": f"/busbussend/{bus}/{send}/mix_on",
+                            "data_type": "boolean",
+                            "data_index": 2,
+                        },
+                        {
+                            "tag": "busbussends",
+                            "input": f"/bus/{bus}/send/{send}/lvl",
+                            "output": f"/busbussend/{bus}/{send}/mix_fader",
+                            "write_transform": "fader_to_db",
+                            "data_index": 1,
+                            "secondary_output": {"_db": {"data_index": 0}},
+                        },
+                        {
+                            "tag": "busbussends",
+                            "input": f"/bus/{bus}/send/{send}/pre",
+                            "output": f"/busbussend/{bus}/{send}/pre",
+                            "data_type": "boolean",
+                            "data_index": 2,
+                        },
+                    ]
+                )
 
         super().__init__(**kwargs)
