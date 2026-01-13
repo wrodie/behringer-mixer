@@ -80,6 +80,9 @@ def db_to_linf(value, config):
 
 
 _wing_colors = [
+    # WING color indices per remote protocol appendix:
+    # 1..12 map to the names below; we additionally keep "OFF" at index 0.
+    # Newer firmware/tooling exposes additional indices; we include known values up to 18.
     "OFF",
     "GRAY_BLUE",
     "MEDIUM_BLUE",
@@ -88,19 +91,42 @@ _wing_colors = [
     "GREEN",
     "OLIVE_GREEN",
     "YELLOW",
-    "ORANGE",
+    "BROWN",
     "RED",
     "CORAL",
-    "PINK",
-    "MAUVE",
+    "MAGENTA",
+    "PURPLE",
+    "ORANGE",
+    "LIGHT_BLUE",
+    "SALMON",
+    "TEAL",
+    "DARK_GRAY",
+    "LIGHT_GRAY",
 ]
 
 
 def wing_color_name_to_index(color_name: str, config) -> int:
     """Convert color name to color index"""
-    return _wing_colors.index(color_name)
+    if color_name in _wing_colors:
+        return _wing_colors.index(color_name)
+    # Allow round-tripping unknown indices exposed as strings (e.g. "COLOR_14").
+    if isinstance(color_name, str) and color_name.startswith("COLOR_"):
+        suffix = color_name.removeprefix("COLOR_")
+        try:
+            return int(suffix)
+        except ValueError as err:
+            raise ValueError(f"Invalid WING color name: {color_name}") from err
+    raise ValueError(f"Unknown WING color name: {color_name}")
 
 
 def wing_color_index_to_name(color_index: int, config) -> str:
     """Convert color index to color name"""
-    return _wing_colors[int(color_index)]
+    try:
+        idx = int(color_index)
+    except (TypeError, ValueError):
+        return "UNKNOWN"
+
+    if 0 <= idx < len(_wing_colors):
+        return _wing_colors[idx]
+
+    return f"COLOR_{idx}"

@@ -6,7 +6,7 @@ class MixerTypeWING(MixerTypeBase):
 
     port_number: int = 2223
     mixer_type: str = "WING"
-    num_channel: int = 48
+    num_channel: int = 40
     num_bus: int = 16
     num_dca: int = 16
     num_fx: int = 0
@@ -26,6 +26,7 @@ class MixerTypeWING(MixerTypeBase):
 
     def __init__(self, **kwargs):
         self.extra_addresses_to_load = [
+            # Mixer info (WING answers "/?" with a "/*" or "/?" response)
             {
                 "input": "/?",
                 "output": "/status",
@@ -71,10 +72,9 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
@@ -138,13 +138,12 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "auxins",
-                "input": "/aux/{num_auxin}/$col",
+                "input": "/aux/{num_auxin}/col",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_color",
-                "data_index": 0,
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
@@ -155,6 +154,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "busses",
                 "input": "/bus/{num_bus}/fdr",
                 "output": "/bus/{num_bus}/mix_fader",
+                "input_padding": {"num_bus": 1},
                 "data_index": 1,
                 "write_transform": "fader_to_db",
                 "secondary_output": {
@@ -167,6 +167,7 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "busses",
                 "input": "/bus/{num_bus}/mute",
                 "output": "/bus/{num_bus}/mix_on",
+                "input_padding": {"num_bus": 1},
                 "data_type": "boolean_inverted",
                 "data_index": 2,
             },
@@ -174,15 +175,16 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "busses",
                 "input": "/bus/{num_bus}/$name",
                 "output": "/bus/{num_bus}/config_name",
+                "input_padding": {"num_bus": 1},
             },
             {
                 "tag": "busses",
                 "input": "/bus/{num_bus}/$col",
                 "output": "/bus/{num_bus}/config_color",
-                "data_index": 0,
+                "input_padding": {"num_bus": 1},
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
@@ -265,10 +267,9 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/mtx/{num_matrix}/$col",
                 "output": "/mtx/{num_matrix}/config_color",
                 "input_padding": {"num_matrix": 1},
-                "data_index": 0,
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
@@ -307,10 +308,9 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/dca/{num_dca}/col",
                 "output": "/dca/{num_dca}/config_color",
                 "input_padding": {"num_dca": 1},
-                "data_index": 0,
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
@@ -349,10 +349,9 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/main/{num_mains}/$col",
                 "output": "/main/{num_mains}/config_color",
                 "input_padding": {"num_mains": 1},
-                "data_index": 0,
+                "data_index": 2,
                 "secondary_output": {
                     "_name": {
-                        "data_index": 0,
                         "forward_function": "wing_color_index_to_name",
                         "reverse_function": "wing_color_name_to_index",
                     },
