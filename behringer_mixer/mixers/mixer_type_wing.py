@@ -46,9 +46,21 @@ The notes below are based on:
         - name:    `/headamp/.../config_name`
         - color:   `/headamp/.../config_color`
     - Phantom (`.../vph`) was writable and read back reliably.
-    - Gain writes are frequently ignored/locked depending on headamp ownership, source selection,
-      or "remote enable"/lock settings, or maybe just not functional like this.
-      TODO: Need to check if we just should use e.g.: /ch/*/in/set/$g instead / additionally.
+        - Gain writes are accepted when Remote Lock is OFF and no competing OSC client is connected.
+        - Effective gain step size on LCL inputs is 2.5 dB (matches console UI), not 0.5 dB as in
+            some docs. Readbacks can occasionally time out on individual steps (likely timing/OSC drop).
+        - Both `/io/in/LCL/<n>/g` and `/ch/<n>/in/set/$g` write paths work; use either depending on
+            whether you want the IO path or the channel path semantics.
+        - Stereo input pairs explain "missing" even LCL patches (e.g. 5/6, 7/8, 9/10...): the right
+            side often shows as unpatched even though it is part of a stereo pair.
+        - AES50 inputs return default values even with no stagebox connected; occasional empty fields
+            are expected (timing/response drop).
+
+6) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
+        - Mapped and read-tested: $mode, srcauto, altsrc, inv, trim, bal, $g, $vph,
+            dlymode, dly, dlyon, conn grp/in, altgrp/altin.
+        - Write-tested (safe toggle/nudge + restore): inv, srcauto, altsrc, trim, bal,
+            dlyon, dly, $vph. (Mode changes were not tested.)
 
 6) Sends and “self-sends”
     - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
@@ -153,6 +165,146 @@ class MixerTypeWING(MixerTypeBase):
                         "reverse_function": "wing_color_name_to_index",
                     },
                 },
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/$g",
+                "output": "/ch/{num_channel}/preamp_gain",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/$vph",
+                "output": "/ch/{num_channel}/preamp_phantom",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/$mode",
+                "output": "/ch/{num_channel}/input_mode",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/srcauto",
+                "output": "/ch/{num_channel}/input_srcauto",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/altsrc",
+                "output": "/ch/{num_channel}/input_altsrc",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/inv",
+                "output": "/ch/{num_channel}/input_invert",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/trim",
+                "output": "/ch/{num_channel}/input_trim",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/bal",
+                "output": "/ch/{num_channel}/input_balance",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/dlymode",
+                "output": "/ch/{num_channel}/input_delay_mode",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/dly",
+                "output": "/ch/{num_channel}/input_delay",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/set/dlyon",
+                "output": "/ch/{num_channel}/input_delay_on",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+                "data_type": "boolean",
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/conn/grp",
+                "output": "/ch/{num_channel}/input_conn_grp",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/conn/in",
+                "output": "/ch/{num_channel}/input_conn_in",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/conn/altgrp",
+                "output": "/ch/{num_channel}/input_alt_conn_grp",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
+            },
+            {
+                "tag": "channelpreamp",
+                "input": "/ch/{num_channel}/in/conn/altin",
+                "output": "/ch/{num_channel}/input_alt_conn_in",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_index": 0,
             },
             # Channel Sends
             {
