@@ -152,15 +152,15 @@ def db_to_float(value, config):
 def wing_headamp_gain_db_to_float(value, config):
     """Normalize WING headamp gain values.
 
-    Per WING OSC documentation, local headamp gain is a float with range
-    -3.0 .. 45.5 dB in 98 discrete steps (0.5 dB increments).
+    Field tests show local headamp gain uses 2.5 dB steps and a range
+    of -2.5 .. 45.0 dB on current firmware (docs claim 0.5 dB).
     """
     try:
         gain_db = float(value)
     except (TypeError, ValueError):
         raise ValueError(f"Invalid headamp gain value: {value!r}")
 
-    gain_db = max(-3.0, min(45.5, gain_db))
-    gain_db = round(gain_db * 2.0) / 2.0
-    gain_db = max(-3.0, min(45.5, gain_db))
+    gain_db = max(-2.5, min(45.0, gain_db))
+    gain_db = round(gain_db / 2.5) * 2.5
+    gain_db = max(-2.5, min(45.0, gain_db))
     return gain_db

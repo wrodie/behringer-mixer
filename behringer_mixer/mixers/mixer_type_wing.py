@@ -178,6 +178,7 @@ class MixerTypeWING(MixerTypeBase):
                     "num_channel": 1,
                 },
                 "data_index": 0,
+                "write_transform": "wing_headamp_gain_db_to_float",
             },
             {
                 "tag": "channelpreamp",
@@ -732,6 +733,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/io/in/LCL/{num_head_amp}/g",
                 "output": "/headamp/{num_head_amp}/gain",
                 "data_index": 2,
+                "write_transform": "wing_headamp_gain_db_to_float",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -782,6 +784,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/io/in/A/{num_aes50_in}/g",
                 "output": "/headamp/a/{num_aes50_in}/gain",
                 "data_index": 2,
+                "write_transform": "wing_headamp_gain_db_to_float",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -830,6 +833,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/io/in/B/{num_aes50_in}/g",
                 "output": "/headamp/b/{num_aes50_in}/gain",
                 "data_index": 2,
+                "write_transform": "wing_headamp_gain_db_to_float",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
@@ -878,6 +882,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input": "/io/in/C/{num_aes50_in}/g",
                 "output": "/headamp/c/{num_aes50_in}/gain",
                 "data_index": 2,
+                "write_transform": "wing_headamp_gain_db_to_float",
                 "secondary_output": {
                     "_db": {
                         "data_index": 0,
