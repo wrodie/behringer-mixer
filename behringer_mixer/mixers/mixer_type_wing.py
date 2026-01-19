@@ -2,7 +2,7 @@
 
 The notes below are based on:
 - The Behringer WING remote protocol documentation (the PDF is partially outdated on a few points).
-- Multiple live tests against a real console.
+- Multiple live tests against a real console fimware 3.1.
 
 1) `/name` vs `/$name` (and `.../name` writeability)
     - Use `/.../name` for both reads and writes.
@@ -45,44 +45,55 @@ The notes below are based on:
         - phantom: `/headamp/<n>/phantom` and `/headamp/a|b|c/<n>/phantom`
         - name:    `/headamp/.../config_name`
         - color:   `/headamp/.../config_color`
-        - Phantom (`.../vph`) was writable and read back reliably.
-        - Gain writes are accepted when Remote Lock is OFF and no competing OSC client is connected.
-        - Effective gain step size on LCL inputs is 2.5 dB (matches console UI), not 0.5 dB as in
-            some docs. Readbacks can occasionally time out on individual steps (likely timing/OSC drop).
-        - Both `/io/in/LCL/<n>/g` and `/ch/<n>/in/set/$g` write paths work; use either depending on
-            whether you want the IO path or the channel path semantics.
-        - Stereo input pairs explain "missing" even LCL patches (e.g. 5/6, 7/8, 9/10...): the right
-            side often shows as unpatched even though it is part of a stereo pair.
-        - AES50 inputs return default values even with no stagebox connected; occasional empty fields
-            are expected (timing/response drop).
+    - Phantom (`.../vph`) was writable and read back reliably.
+    - Gain writes work when Remote Lock is OFF and no competing OSC client is connected.
+    - LCL gain step size is 2.5 dB (matches UI), not 0.5 dB as docs suggest. Occasional read
+      timeouts on individual steps were observed.
+    - Both `/io/in/LCL/<n>/g` (source) and `/ch/<n>/in/set/$g` (channel) write paths work.
+        - Use tag `headamps` for source-type (LCL/A/B/C) access.
+    - Stereo input pairs explain "missing" even LCL patches (e.g. 5/6, 7/8, 9/10...).
+    - AES50 inputs return default values even with no stagebox connected; occasional empty fields
+      are expected (timing/response drop).
 
 6) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
-        - Mapped and read-tested: $mode, srcauto, altsrc, inv, trim, bal, $g, $vph,
-            dlymode, dly, dlyon, conn grp/in, altgrp/altin.
-        - Write-tested (safe toggle/nudge + restore): inv, srcauto, altsrc, trim, bal,
-            dlyon, dly, $vph. (Mode changes were not tested.)
+    - Mapped and read-tested:
+        - Input mode: `/ch/<n>/in/set/$mode` (M/ST/M-S)
+        - Source switches: `/ch/<n>/in/set/srcauto`, `/ch/<n>/in/set/altsrc`
+        - Polarity: `/ch/<n>/in/set/inv`
+        - Trim/Balance: `/ch/<n>/in/set/trim`, `/ch/<n>/in/set/bal`
+        - Preamp gain + phantom: `/ch/<n>/in/set/$g`, `/ch/<n>/in/set/$vph`
+        - Input delay: `/ch/<n>/in/set/dlymode`, `/ch/<n>/in/set/dly`, `/ch/<n>/in/set/dlyon`
+        - Connection: `/ch/<n>/in/conn/grp`, `/ch/<n>/in/conn/in`, `/ch/<n>/in/conn/altgrp`, `/ch/<n>/in/conn/altin`
+    - Write-tested: inv, srcauto, altsrc, trim, bal,
+        dlyon, dly, $vph. (Mode changes were not tested yet.)
+    - Use tag `channelpreamp` for channel-based access.
 
 7) Sends and “self-sends”
+    - Bus → bus sends are mapped under tag `busbussends`.
     - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
+    - Bus → Matrix `pre` and Bus → Main `pre` are mapped (`/bus/<n>/send/MX<m>/pre`, `/bus/<n>/main/<m>/pre`).
 
 8) `/status` is synthetic
     - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
+    - WING may answer `/ ?` as `/ ?` or `/*`. `/*` is also used for generic ACK/ERROR strings.
+        We only parse `/*` replies that start with `WING,`.
     - `/status` is not a real writable OSC endpoint.
 
 9) USB player playlist behavior
-        - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
+    - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
             (e.g. `/play/$songs` with value `?`) to retrieve the full playlist.
-        - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
-        - Player actions (PLAY/PAUSE/STOP) return `ERROR` if no playlist/file is active.
-        - To play reliably: open a playlist on the console, set `/play/$actidx` and send `PLAY`.
+    - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
+    - Player actions (PLAY/PAUSE/STOP) return `ERROR` if no playlist/file is active.
+    - To play reliably: open a playlist on the console, set `/play/$actidx` and send `PLAY`.
 
-10) Conditional endpoints (USB recorder, show/library)
-        - Some `/usb/rec/*` and show/library endpoints are conditional on media/show state and may
-            time out even if the mapping is correct.
-        - Observed: `/usb/rec/path` returned <no response> even with a USB stick inserted, while
-            `/usb/rec/state`, `/usb/rec/file`, `/usb/rec/time`, `/usb/rec/resolution`, `/usb/rec/channels`
-            were responsive.
-        - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
+10) USB recorder behavior
+    - Check `/usb/rec/state` and `/usb/rec/file`.
+    - Trigger actions via `/usb/rec/action` (values: NEWFILE, REC, STOP, PAUSE).
+    - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
+    - `/usb/rec/path` was removed.
+
+11) WING variants
+    - WINGRACK and WINGCOMPACT use the same mapping with a larger local headamp count (24).
 """
 
 from .mixer_type_base import MixerTypeBase
@@ -698,11 +709,6 @@ class MixerTypeWING(MixerTypeBase):
                     "PAUSE": "PAUSE",
                     "NEWFILE": "NEWFILE",
                 },
-            },
-            {
-                "tag": "usbrec",
-                "input": "/rec/path",
-                "output": "/usb/rec/path",
             },
             {
                 "tag": "usbrec",
