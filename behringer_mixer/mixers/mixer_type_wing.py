@@ -45,7 +45,7 @@ The notes below are based on:
         - phantom: `/headamp/<n>/phantom` and `/headamp/a|b|c/<n>/phantom`
         - name:    `/headamp/.../config_name`
         - color:   `/headamp/.../config_color`
-    - Phantom (`.../vph`) was writable and read back reliably.
+        - Phantom (`.../vph`) was writable and read back reliably.
         - Gain writes are accepted when Remote Lock is OFF and no competing OSC client is connected.
         - Effective gain step size on LCL inputs is 2.5 dB (matches console UI), not 0.5 dB as in
             some docs. Readbacks can occasionally time out on individual steps (likely timing/OSC drop).
@@ -62,23 +62,27 @@ The notes below are based on:
         - Write-tested (safe toggle/nudge + restore): inv, srcauto, altsrc, trim, bal,
             dlyon, dly, $vph. (Mode changes were not tested.)
 
-6) Sends and “self-sends”
+7) Sends and “self-sends”
     - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
 
-7) `/status` is synthetic
+8) `/status` is synthetic
     - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
     - `/status` is not a real writable OSC endpoint.
 
-8) USB player playlist behavior
+9) USB player playlist behavior
         - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
             (e.g. `/play/$songs` with value `?`) to retrieve the full playlist.
         - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
-        - Many `/play/*` nodes respond only when a playlist is open on the console.
+        - Player actions (PLAY/PAUSE/STOP) return `ERROR` if no playlist/file is active.
+        - To play reliably: open a playlist on the console, set `/play/$actidx` and send `PLAY`.
 
-9) Conditional endpoints (USB recorder, show/library)
+10) Conditional endpoints (USB recorder, show/library)
         - Some `/usb/rec/*` and show/library endpoints are conditional on media/show state and may
-            time out even if the mapping is correct (e.g. `/usb/rec/path` when no medium is present).
-            TODO: Deep dive into which endpoints are always available vs conditional.
+            time out even if the mapping is correct.
+        - Observed: `/usb/rec/path` returned <no response> even with a USB stick inserted, while
+            `/usb/rec/state`, `/usb/rec/file`, `/usb/rec/time`, `/usb/rec/resolution`, `/usb/rec/channels`
+            were responsive.
+        - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
 """
 
 from .mixer_type_base import MixerTypeBase
