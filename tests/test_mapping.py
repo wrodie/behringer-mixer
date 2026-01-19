@@ -26,3 +26,14 @@ async def test_mixer_xr16():
         existing = json.dumps(json_data)
         print(mapping)
         assert mapping == existing
+
+
+@pytest.mark.asyncio
+async def test_mixer_wing():
+    # Open and read the JSON file
+    with open("tests/wingmapping.json", "r") as file:
+        json_data = json.load(file)
+        mixer = mixer_api.create("WING", ip="192.168.1.1")
+        mapping = json.dumps(mixer.dump_mapping())
+        existing = json.dumps(json_data)
+        assert mapping == existing
