@@ -57,10 +57,16 @@ The notes below are based on:
     - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
     - `/status` is not a real writable OSC endpoint.
 
-8) Conditional endpoints (USB recorder, show/library)
-    - Some `/usb/rec/*` and show/library endpoints are conditional on media/show state and may
-      time out even if the mapping is correct (e.g. `/usb/rec/path` when no medium is present).
-      TODO: Deep dive into which endpoints are always available vs conditional.
+8) USB player playlist behavior
+        - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
+            (e.g. `/play/$songs` with value `?`) to retrieve the full playlist.
+        - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
+        - Many `/play/*` nodes respond only when a playlist is open on the console.
+
+9) Conditional endpoints (USB recorder, show/library)
+        - Some `/usb/rec/*` and show/library endpoints are conditional on media/show state and may
+            time out even if the mapping is correct (e.g. `/usb/rec/path` when no medium is present).
+            TODO: Deep dive into which endpoints are always available vs conditional.
 """
 
 from .mixer_type_base import MixerTypeBase
@@ -480,6 +486,22 @@ class MixerTypeWING(MixerTypeBase):
                 "tag": "usb",
                 "input": "/play/$actfile",
                 "output": "/usb/file",
+            },
+            {
+                "tag": "usb",
+                "input": "/play/$actlist",
+                "output": "/usb/playlist/path",
+            },
+            {
+                "tag": "usb",
+                "input": "/play/$actidx",
+                "output": "/usb/playlist/index",
+                "data_index": 0,
+            },
+            {
+                "tag": "usb",
+                "input": "/play/$songs",
+                "output": "/usb/playlist/songs",
             },
 
             # USB Recorder
