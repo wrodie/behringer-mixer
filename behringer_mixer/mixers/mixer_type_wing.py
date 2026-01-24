@@ -40,7 +40,7 @@ The notes below are based on:
 5) Scribble strip light (LED)
     - `/ch/<n>/led` and `/aux/<n>/led` toggle the scribble light (0/1).
     - Mapped to `/ch/<n>/config_led` and `/auxin/<n>/config_led`.
-    - Field tests show no readback for `/.../led`. Treat as write-only.
+    - Field tests show readback does work on `/.../led` (returns multi-value tuples like other endpoints).
 
 6) Headamps: local (LCL) and AES50 (A/B/C)
     - Local headamps are addressed via `/io/in/LCL/<n>/...`.
