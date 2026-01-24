@@ -106,8 +106,6 @@ _wing_colors = [
 
 def wing_color_name_to_index(color_name: str, config) -> int:
     """Convert color name to color index"""
-    if color_name == "OFF":
-        return 0
     if color_name in _wing_colors:
         return _wing_colors.index(color_name) + 1
     # Allow round-tripping unknown indices exposed as strings (e.g. "COLOR_14").
@@ -127,9 +125,6 @@ def wing_color_index_to_name(color_index: int, config) -> str:
         idx = int(float(color_index))
     except (TypeError, ValueError):
         return "UNKNOWN"
-
-    if idx == 0:
-        return "OFF"
 
     # External is 1-based; convert to internal 0-based.
     idx0 = idx - 1

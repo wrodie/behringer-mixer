@@ -29,7 +29,7 @@ The notes below are based on:
 3) Color count: documentation says 12, firmware >= 3.1 exposes 18
     - We treat indices as:
         - 1..18 for named colors
-        - 0 as OFF/none (seen on some objects)
+        - 0 or 'OFF' did not appear again at testing
     - Name<->index helpers (`wing_color_*`) are implemented for 18 colors. Unknown values
       round-trip as "COLOR_<n>".
 
@@ -37,7 +37,12 @@ The notes below are based on:
     - On the tested console, channel/aux/bus/main/matrix colors were writable.
     - DCA and some headamp color endpoints appeared to ignore writes.
 
-5) Headamps: local (LCL) and AES50 (A/B/C)
+5) Scribble strip light (LED)
+    - `/ch/<n>/led` and `/aux/<n>/led` toggle the scribble light (0/1).
+    - Mapped to `/ch/<n>/config_led` and `/auxin/<n>/config_led`.
+    - Field tests show no readback for `/.../led`. Treat as write-only.
+
+6) Headamps: local (LCL) and AES50 (A/B/C)
     - Local headamps are addressed via `/io/in/LCL/<n>/...`.
     - AES50 headamps are addressed via `/io/in/A|B|C/<n>/...`.
     - We expose them as library keys:
@@ -55,7 +60,7 @@ The notes below are based on:
     - AES50 inputs return default values even with no stagebox connected; occasional empty fields
       are expected (timing/response drop).
 
-6) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
+7) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
     - Mapped and read-tested:
         - Input mode: `/ch/<n>/in/set/$mode` (M/ST/M-S)
         - Source switches: `/ch/<n>/in/set/srcauto`, `/ch/<n>/in/set/altsrc`
@@ -68,31 +73,31 @@ The notes below are based on:
         dlyon, dly, $vph. (Mode changes were not tested yet.)
     - Use tag `channelpreamp` for channel-based access.
 
-7) Sends and “self-sends”
+8) Sends and “self-sends”
     - Bus → bus sends are mapped under tag `busbussends`.
     - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
     - Bus → Matrix `pre` and Bus → Main `pre` are mapped (`/bus/<n>/send/MX<m>/pre`, `/bus/<n>/main/<m>/pre`).
 
-8) `/status` is synthetic
+9) `/status` is synthetic
     - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
     - WING may answer `/ ?` as `/ ?` or `/*`. `/*` is also used for generic ACK/ERROR strings.
         We only parse `/*` replies that start with `WING,`.
     - `/status` is not a real writable OSC endpoint.
 
-9) USB player playlist behavior
+10) USB player playlist behavior
     - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
             (e.g. `/play/$songs` with value `?`) to retrieve the full playlist.
     - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
     - Player actions (PLAY/PAUSE/STOP) return `ERROR` if no playlist/file is active.
     - To play reliably: open a playlist on the console, set `/play/$actidx` and send `PLAY`.
 
-10) USB recorder behavior
+11) USB recorder behavior
     - Check `/usb/rec/state` and `/usb/rec/file`.
     - Trigger actions via `/usb/rec/action` (values: NEWFILE, REC, STOP, PAUSE).
     - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
     - `/usb/rec/path` was removed.
 
-11) WING variants
+12) WING variants
     - WINGRACK and WINGCOMPACT use the same mapping with a larger local headamp count (24).
 """
 
@@ -182,13 +187,23 @@ class MixerTypeWING(MixerTypeBase):
                 },
             },
             {
+                "tag": "channels",
+                "input": "/ch/{num_channel}/led",
+                "output": "/ch/{num_channel}/config_led",
+                "input_padding": {
+                    "num_channel": 1,
+                },
+                "data_type": "boolean",
+                "data_index": 0,
+            },
+            {
                 "tag": "channelpreamp",
                 "input": "/ch/{num_channel}/in/set/$g",
                 "output": "/ch/{num_channel}/preamp_gain",
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "write_transform": "wing_headamp_gain_db_to_float",
             },
             {
@@ -198,7 +213,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean",
             },
             {
@@ -217,7 +232,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean",
             },
             {
@@ -227,7 +242,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean",
             },
             {
@@ -237,7 +252,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean",
             },
             {
@@ -283,7 +298,7 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "data_index": 0,
+                "data_index": 2,
                 "data_type": "boolean",
             },
             {
@@ -390,6 +405,14 @@ class MixerTypeWING(MixerTypeBase):
                         "reverse_function": "wing_color_name_to_index",
                     },
                 },
+            },
+            {
+                "tag": "auxins",
+                "input": "/aux/{num_auxin}/led",
+                "input_padding": {"num_auxin": 1},
+                "output": "/auxin/{num_auxin}/config_led",
+                "data_type": "boolean",
+                "data_index": 0,
             },
             # Busses
             {
