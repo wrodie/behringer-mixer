@@ -70,17 +70,21 @@ The notes below are based on:
         We only parse `/*` replies that start with `WING,`.
     - `/status` is not a real writable OSC endpoint.
 
-9) USB player playlist behavior
+9) USB player behavior
     - `/play/$songs` returns the first song on a simple read; use a node-level request
         (e.g. `/play/$songs` with value `?`) for the full playlist.
     - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`).
     - Actions can return `ERROR` if no playlist/file is active; to play reliably open a
-        playlist on the console, set `/play/$actidx`, then send `PLAY`.
+      playlist on the console (or set `/play/$actlist`), set `/play/$actidx`, then send `PLAY`.
+    - Playback was verified when a playlist was active (state moved to `PLAY`).
+    - Direct file playback works via `/play/$playfile` + `PLAYFILE`, even without playlist metadata.
+    - `/usb/playlist/songs` may return an empty string or a single string entry; normalize to a list.
 
 10) USB recorder behavior
     - Check `/usb/rec/state` and `/usb/rec/file`.
     - Trigger actions via `/usb/rec/action` (values: NEWFILE, REC, STOP, PAUSE).
     - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
+    - PAUSE freezes `/usb/rec/time` and resume continues the counter.
     - `/usb/rec/path` was removed.
 
 """
