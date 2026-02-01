@@ -97,7 +97,7 @@ class MixerBase:
         if addr == "/xinfo":
             self.handle_xinfo(data)
             updates = []
-        # WING responds to the info query ("/?") with either "/?" or "/*" depending on firmwaren. 
+        # WING responds to the info query ("/?") with either "/?" or "/*" depending on firmware. 
         # Note: "/*" is also used for generic ACK/error strings (e.g. OK, NODE NOT FOUND).
         if addr in ("/*", "/?") and data and isinstance(data[0], str):
             if data[0].startswith("WING,"):
