@@ -80,10 +80,9 @@ def db_to_linf(value, config):
 
 
 _wing_colors = [
-    # WING color indices per remote protocol appendix:
-    # 1..12 map to the names below; we additionally keep "OFF" at index 0.
-    # Newer firmware/tooling exposes additional indices; we include known values up to 18.
-    "OFF",
+    # WING firmware >= 3.1 exposes 18 colors.
+    # OSC returns (string, normalized, int). String is 1-based, int is 0-based.
+    # 0-based list of the 18 color names.
     "GRAY_BLUE",
     "MEDIUM_BLUE",
     "DARK_BLUE",
@@ -109,24 +108,51 @@ def wing_color_name_to_index(color_name: str, config) -> int:
     """Convert color name to color index"""
     if color_name in _wing_colors:
         return _wing_colors.index(color_name)
-    # Allow round-tripping unknown indices exposed as strings (e.g. "COLOR_14").
-    if isinstance(color_name, str) and color_name.startswith("COLOR_"):
-        suffix = color_name.removeprefix("COLOR_")
-        try:
-            return int(suffix)
-        except ValueError as err:
-            raise ValueError(f"Invalid WING color name: {color_name}") from err
     raise ValueError(f"Unknown WING color name: {color_name}")
 
 
 def wing_color_index_to_name(color_index: int, config) -> str:
     """Convert color index to color name"""
+    if 0 <= color_index < len(_wing_colors):
+        return _wing_colors[color_index]
+    raise ValueError(f"Unknown WING color index: {color_index}")
+
+
+def wing_color_index_to_device(color_index: int, config) -> int:
+    """Convert internal 0-based color index to WING's 1-based write value."""
     try:
-        idx = int(color_index)
+        idx = int(float(color_index))
+    except (TypeError, ValueError) as err:
+        raise ValueError(f"Invalid WING color index: {color_index}") from err
+
+    if idx < 0 or idx >= len(_wing_colors):
+        raise ValueError(f"Unknown WING color index: {idx}")
+
+    return idx + 1
+
+
+def float_to_db(value, config):
+    """Pass-through conversion for values that are already in dB."""
+    return value
+
+
+def db_to_float(value, config):
+    """Inverse of float_to_db (pass-through)."""
+    return value
+
+
+def wing_headamp_gain_db_to_float(value, config):
+    """Normalize WING headamp gain values.
+
+    Field tests show local headamp gain uses 2.5 dB steps and a range
+    of -2.5 .. 45.0 dB on current firmware (docs claim 0.5 dB).
+    """
+    try:
+        gain_db = float(value)
     except (TypeError, ValueError):
-        return "UNKNOWN"
+        raise ValueError(f"Invalid headamp gain value: {value!r}")
 
-    if 0 <= idx < len(_wing_colors):
-        return _wing_colors[idx]
-
-    return f"COLOR_{idx}"
+    gain_db = max(-2.5, min(45.0, gain_db))
+    gain_db = round(gain_db / 2.5) * 2.5
+    gain_db = max(-2.5, min(45.0, gain_db))
+    return gain_db
