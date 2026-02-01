@@ -210,29 +210,8 @@ class MixerBase:
         if state_key:
             if "data_index" in address_data:
                 value = values[address_data["data_index"]]
-            mapping = address_data.get("mapping")
-            if mapping:
-                try:
-                    value = mapping.get(value)
-                except TypeError:
-                    pass
-            if address_data.get("data_type", "") == "int":
-                # WING often returns numbers as strings (e.g. "7").
-                # Guard for list/tuple payloads and unknown types.
-                scalar: Any = value
-                if isinstance(value, (list, tuple)):
-                    scalar = value[0] if value else None
-
-                if isinstance(scalar, bool):
-                    # Avoid True/False becoming 1/0 unless explicitly intended.
-                    pass
-                elif isinstance(scalar, (int, float)):
-                    value = int(scalar)
-                elif isinstance(scalar, str):
-                    try:
-                        value = int(float(scalar))
-                    except ValueError:
-                        pass
+            if address_data.get("mapping"):
+                value = address_data["mapping"].get(value)
             if address_data.get("data_type", "") == "boolean":
                 value = bool(value)
             if address_data.get("data_type", "") == "boolean_inverted":

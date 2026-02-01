@@ -28,6 +28,10 @@
         "output": "/auxin/1/mix_fader"
     },
     {
+        "input": "/aux/1/led",
+        "output": "/auxin/1/config_led"
+    },
+    {
         "input": "/aux/1/mute",
         "output": "/auxin/1/mix_on"
     },
@@ -42,6 +46,10 @@
     {
         "input": "/aux/2/fdr",
         "output": "/auxin/2/mix_fader"
+    },
+    {
+        "input": "/aux/2/led",
+        "output": "/auxin/2/config_led"
     },
     {
         "input": "/aux/2/mute",
@@ -60,6 +68,10 @@
         "output": "/auxin/3/mix_fader"
     },
     {
+        "input": "/aux/3/led",
+        "output": "/auxin/3/config_led"
+    },
+    {
         "input": "/aux/3/mute",
         "output": "/auxin/3/mix_on"
     },
@@ -74,6 +86,10 @@
     {
         "input": "/aux/4/fdr",
         "output": "/auxin/4/mix_fader"
+    },
+    {
+        "input": "/aux/4/led",
+        "output": "/auxin/4/config_led"
     },
     {
         "input": "/aux/4/mute",
@@ -92,6 +108,10 @@
         "output": "/auxin/5/mix_fader"
     },
     {
+        "input": "/aux/5/led",
+        "output": "/auxin/5/config_led"
+    },
+    {
         "input": "/aux/5/mute",
         "output": "/auxin/5/mix_on"
     },
@@ -106,6 +126,10 @@
     {
         "input": "/aux/6/fdr",
         "output": "/auxin/6/mix_fader"
+    },
+    {
+        "input": "/aux/6/led",
+        "output": "/auxin/6/config_led"
     },
     {
         "input": "/aux/6/mute",
@@ -124,6 +148,10 @@
         "output": "/auxin/7/mix_fader"
     },
     {
+        "input": "/aux/7/led",
+        "output": "/auxin/7/config_led"
+    },
+    {
         "input": "/aux/7/mute",
         "output": "/auxin/7/mix_on"
     },
@@ -138,6 +166,10 @@
     {
         "input": "/aux/8/fdr",
         "output": "/auxin/8/mix_fader"
+    },
+    {
+        "input": "/aux/8/led",
+        "output": "/auxin/8/config_led"
     },
     {
         "input": "/aux/8/mute",
@@ -5656,6 +5688,10 @@
         "output": "/ch/1/input_trim"
     },
     {
+        "input": "/ch/1/led",
+        "output": "/ch/1/config_led"
+    },
+    {
         "input": "/ch/1/mute",
         "output": "/ch/1/mix_on"
     },
@@ -5858,6 +5894,10 @@
     {
         "input": "/ch/10/in/set/trim",
         "output": "/ch/10/input_trim"
+    },
+    {
+        "input": "/ch/10/led",
+        "output": "/ch/10/config_led"
     },
     {
         "input": "/ch/10/mute",
@@ -6064,6 +6104,10 @@
         "output": "/ch/11/input_trim"
     },
     {
+        "input": "/ch/11/led",
+        "output": "/ch/11/config_led"
+    },
+    {
         "input": "/ch/11/mute",
         "output": "/ch/11/mix_on"
     },
@@ -6266,6 +6310,10 @@
     {
         "input": "/ch/12/in/set/trim",
         "output": "/ch/12/input_trim"
+    },
+    {
+        "input": "/ch/12/led",
+        "output": "/ch/12/config_led"
     },
     {
         "input": "/ch/12/mute",
@@ -6472,6 +6520,10 @@
         "output": "/ch/13/input_trim"
     },
     {
+        "input": "/ch/13/led",
+        "output": "/ch/13/config_led"
+    },
+    {
         "input": "/ch/13/mute",
         "output": "/ch/13/mix_on"
     },
@@ -6674,6 +6726,10 @@
     {
         "input": "/ch/14/in/set/trim",
         "output": "/ch/14/input_trim"
+    },
+    {
+        "input": "/ch/14/led",
+        "output": "/ch/14/config_led"
     },
     {
         "input": "/ch/14/mute",
@@ -6880,6 +6936,10 @@
         "output": "/ch/15/input_trim"
     },
     {
+        "input": "/ch/15/led",
+        "output": "/ch/15/config_led"
+    },
+    {
         "input": "/ch/15/mute",
         "output": "/ch/15/mix_on"
     },
@@ -7082,6 +7142,10 @@
     {
         "input": "/ch/16/in/set/trim",
         "output": "/ch/16/input_trim"
+    },
+    {
+        "input": "/ch/16/led",
+        "output": "/ch/16/config_led"
     },
     {
         "input": "/ch/16/mute",
@@ -7288,6 +7352,10 @@
         "output": "/ch/17/input_trim"
     },
     {
+        "input": "/ch/17/led",
+        "output": "/ch/17/config_led"
+    },
+    {
         "input": "/ch/17/mute",
         "output": "/ch/17/mix_on"
     },
@@ -7490,6 +7558,10 @@
     {
         "input": "/ch/18/in/set/trim",
         "output": "/ch/18/input_trim"
+    },
+    {
+        "input": "/ch/18/led",
+        "output": "/ch/18/config_led"
     },
     {
         "input": "/ch/18/mute",
@@ -7696,6 +7768,10 @@
         "output": "/ch/19/input_trim"
     },
     {
+        "input": "/ch/19/led",
+        "output": "/ch/19/config_led"
+    },
+    {
         "input": "/ch/19/mute",
         "output": "/ch/19/mix_on"
     },
@@ -7898,6 +7974,10 @@
     {
         "input": "/ch/2/in/set/trim",
         "output": "/ch/2/input_trim"
+    },
+    {
+        "input": "/ch/2/led",
+        "output": "/ch/2/config_led"
     },
     {
         "input": "/ch/2/mute",
@@ -8104,6 +8184,10 @@
         "output": "/ch/20/input_trim"
     },
     {
+        "input": "/ch/20/led",
+        "output": "/ch/20/config_led"
+    },
+    {
         "input": "/ch/20/mute",
         "output": "/ch/20/mix_on"
     },
@@ -8306,6 +8390,10 @@
     {
         "input": "/ch/21/in/set/trim",
         "output": "/ch/21/input_trim"
+    },
+    {
+        "input": "/ch/21/led",
+        "output": "/ch/21/config_led"
     },
     {
         "input": "/ch/21/mute",
@@ -8512,6 +8600,10 @@
         "output": "/ch/22/input_trim"
     },
     {
+        "input": "/ch/22/led",
+        "output": "/ch/22/config_led"
+    },
+    {
         "input": "/ch/22/mute",
         "output": "/ch/22/mix_on"
     },
@@ -8714,6 +8806,10 @@
     {
         "input": "/ch/23/in/set/trim",
         "output": "/ch/23/input_trim"
+    },
+    {
+        "input": "/ch/23/led",
+        "output": "/ch/23/config_led"
     },
     {
         "input": "/ch/23/mute",
@@ -8920,6 +9016,10 @@
         "output": "/ch/24/input_trim"
     },
     {
+        "input": "/ch/24/led",
+        "output": "/ch/24/config_led"
+    },
+    {
         "input": "/ch/24/mute",
         "output": "/ch/24/mix_on"
     },
@@ -9122,6 +9222,10 @@
     {
         "input": "/ch/25/in/set/trim",
         "output": "/ch/25/input_trim"
+    },
+    {
+        "input": "/ch/25/led",
+        "output": "/ch/25/config_led"
     },
     {
         "input": "/ch/25/mute",
@@ -9328,6 +9432,10 @@
         "output": "/ch/26/input_trim"
     },
     {
+        "input": "/ch/26/led",
+        "output": "/ch/26/config_led"
+    },
+    {
         "input": "/ch/26/mute",
         "output": "/ch/26/mix_on"
     },
@@ -9530,6 +9638,10 @@
     {
         "input": "/ch/27/in/set/trim",
         "output": "/ch/27/input_trim"
+    },
+    {
+        "input": "/ch/27/led",
+        "output": "/ch/27/config_led"
     },
     {
         "input": "/ch/27/mute",
@@ -9736,6 +9848,10 @@
         "output": "/ch/28/input_trim"
     },
     {
+        "input": "/ch/28/led",
+        "output": "/ch/28/config_led"
+    },
+    {
         "input": "/ch/28/mute",
         "output": "/ch/28/mix_on"
     },
@@ -9938,6 +10054,10 @@
     {
         "input": "/ch/29/in/set/trim",
         "output": "/ch/29/input_trim"
+    },
+    {
+        "input": "/ch/29/led",
+        "output": "/ch/29/config_led"
     },
     {
         "input": "/ch/29/mute",
@@ -10144,6 +10264,10 @@
         "output": "/ch/3/input_trim"
     },
     {
+        "input": "/ch/3/led",
+        "output": "/ch/3/config_led"
+    },
+    {
         "input": "/ch/3/mute",
         "output": "/ch/3/mix_on"
     },
@@ -10346,6 +10470,10 @@
     {
         "input": "/ch/30/in/set/trim",
         "output": "/ch/30/input_trim"
+    },
+    {
+        "input": "/ch/30/led",
+        "output": "/ch/30/config_led"
     },
     {
         "input": "/ch/30/mute",
@@ -10552,6 +10680,10 @@
         "output": "/ch/31/input_trim"
     },
     {
+        "input": "/ch/31/led",
+        "output": "/ch/31/config_led"
+    },
+    {
         "input": "/ch/31/mute",
         "output": "/ch/31/mix_on"
     },
@@ -10754,6 +10886,10 @@
     {
         "input": "/ch/32/in/set/trim",
         "output": "/ch/32/input_trim"
+    },
+    {
+        "input": "/ch/32/led",
+        "output": "/ch/32/config_led"
     },
     {
         "input": "/ch/32/mute",
@@ -10960,6 +11096,10 @@
         "output": "/ch/33/input_trim"
     },
     {
+        "input": "/ch/33/led",
+        "output": "/ch/33/config_led"
+    },
+    {
         "input": "/ch/33/mute",
         "output": "/ch/33/mix_on"
     },
@@ -11162,6 +11302,10 @@
     {
         "input": "/ch/34/in/set/trim",
         "output": "/ch/34/input_trim"
+    },
+    {
+        "input": "/ch/34/led",
+        "output": "/ch/34/config_led"
     },
     {
         "input": "/ch/34/mute",
@@ -11368,6 +11512,10 @@
         "output": "/ch/35/input_trim"
     },
     {
+        "input": "/ch/35/led",
+        "output": "/ch/35/config_led"
+    },
+    {
         "input": "/ch/35/mute",
         "output": "/ch/35/mix_on"
     },
@@ -11570,6 +11718,10 @@
     {
         "input": "/ch/36/in/set/trim",
         "output": "/ch/36/input_trim"
+    },
+    {
+        "input": "/ch/36/led",
+        "output": "/ch/36/config_led"
     },
     {
         "input": "/ch/36/mute",
@@ -11776,6 +11928,10 @@
         "output": "/ch/37/input_trim"
     },
     {
+        "input": "/ch/37/led",
+        "output": "/ch/37/config_led"
+    },
+    {
         "input": "/ch/37/mute",
         "output": "/ch/37/mix_on"
     },
@@ -11978,6 +12134,10 @@
     {
         "input": "/ch/38/in/set/trim",
         "output": "/ch/38/input_trim"
+    },
+    {
+        "input": "/ch/38/led",
+        "output": "/ch/38/config_led"
     },
     {
         "input": "/ch/38/mute",
@@ -12184,6 +12344,10 @@
         "output": "/ch/39/input_trim"
     },
     {
+        "input": "/ch/39/led",
+        "output": "/ch/39/config_led"
+    },
+    {
         "input": "/ch/39/mute",
         "output": "/ch/39/mix_on"
     },
@@ -12386,6 +12550,10 @@
     {
         "input": "/ch/4/in/set/trim",
         "output": "/ch/4/input_trim"
+    },
+    {
+        "input": "/ch/4/led",
+        "output": "/ch/4/config_led"
     },
     {
         "input": "/ch/4/mute",
@@ -12592,6 +12760,10 @@
         "output": "/ch/40/input_trim"
     },
     {
+        "input": "/ch/40/led",
+        "output": "/ch/40/config_led"
+    },
+    {
         "input": "/ch/40/mute",
         "output": "/ch/40/mix_on"
     },
@@ -12794,6 +12966,10 @@
     {
         "input": "/ch/5/in/set/trim",
         "output": "/ch/5/input_trim"
+    },
+    {
+        "input": "/ch/5/led",
+        "output": "/ch/5/config_led"
     },
     {
         "input": "/ch/5/mute",
@@ -13000,6 +13176,10 @@
         "output": "/ch/6/input_trim"
     },
     {
+        "input": "/ch/6/led",
+        "output": "/ch/6/config_led"
+    },
+    {
         "input": "/ch/6/mute",
         "output": "/ch/6/mix_on"
     },
@@ -13202,6 +13382,10 @@
     {
         "input": "/ch/7/in/set/trim",
         "output": "/ch/7/input_trim"
+    },
+    {
+        "input": "/ch/7/led",
+        "output": "/ch/7/config_led"
     },
     {
         "input": "/ch/7/mute",
@@ -13408,6 +13592,10 @@
         "output": "/ch/8/input_trim"
     },
     {
+        "input": "/ch/8/led",
+        "output": "/ch/8/config_led"
+    },
+    {
         "input": "/ch/8/mute",
         "output": "/ch/8/mix_on"
     },
@@ -13610,6 +13798,10 @@
     {
         "input": "/ch/9/in/set/trim",
         "output": "/ch/9/input_trim"
+    },
+    {
+        "input": "/ch/9/led",
+        "output": "/ch/9/config_led"
     },
     {
         "input": "/ch/9/mute",
@@ -16698,10 +16890,6 @@
     {
         "input": "/rec/channels",
         "output": "/usb/rec/channels"
-    },
-    {
-        "input": "/rec/path",
-        "output": "/usb/rec/path"
     },
     {
         "input": "/rec/resolution",

@@ -8,41 +8,32 @@ The notes below are based on:
     - Use `/.../name` for both reads and writes.
     - The `/$name` endpoints may respond to reads, but they are not reliably writable
       (they behave like "read-only / linked" reflection).
-    - Our mapping outputs use `/.../config_name` (library-level key), with input set to `/.../name`.
+    - Mapping outputs use `/.../config_name` (library-level key), with input set to `/.../name`.
     - Practical length limits (observed):
         - Most strips: 16 chars
         - DCA: 8 chars
 
 2) `/col` vs `/$col` (and `/col` reply payload format)
-    - Use `/.../col` for both reads and writes.
-    - The `/$col` endpoints behave like the `/$name` ones: reads may work, writes are unreliable.
-    - Important: WING’s reply to `/.../col` is *multi-value*. Example payload observed:
-         ('9', 0.47058823529411764, 8)
-      Interpreted as:
+    - Use `/.../col` for reads and writes; `/$col` reads may work, writes are unreliable.
+    - WING’s reply to `/.../col` is *multi-value*:
         - element[0]: 1-based color index as a STRING ("1".."18")
         - element[1]: normalized float (approximately (idx-1)/17)
         - element[2]: 0-based index as int (idx-1)
-    - For stable round-tripping we store the external 1-based index from element[0]
-      (`data_type: int`, `data_index: 0`).
-    - The OSC stack sometimes delivers numeric values as strings!
+        - We store the 0-based integer from element[2]
+        - Writes use 1-based indices on the device; we apply a write transform
+            so `/.../config_color` stays 0-based internally.
+    - No OFF/0 state observed on the device; internal 0 maps to device 1.
 
 3) Color count: documentation says 12, firmware >= 3.1 exposes 18
-    - We treat indices as:
-        - 1..18 for named colors
-        - 0 or 'OFF' did not appear again at testing
-    - Name<->index helpers (`wing_color_*`) are implemented for 18 colors. Unknown values
-      round-trip as "COLOR_<n>".
+    - Verified 1..18 on CH1; all read back correctly.
+    - Name<->index helpers (`wing_color_*`) are implemented for 18 colors and are strict
+      (unknown values raise a ValueError).
 
-4) Color writeability can be object-dependent
-    - On the tested console, channel/aux/bus/main/matrix colors were writable.
-    - DCA and some headamp color endpoints appeared to ignore writes.
-
-5) Scribble strip light (LED)
+4) Scribble strip light (LED)
     - `/ch/<n>/led` and `/aux/<n>/led` toggle the scribble light (0/1).
     - Mapped to `/ch/<n>/config_led` and `/auxin/<n>/config_led`.
-    - Field tests show readback does work on `/.../led` (returns multi-value tuples like other endpoints).
 
-6) Headamps: local (LCL) and AES50 (A/B/C)
+5) Headamps: local (LCL) and AES50 (A/B/C)
     - Local headamps are addressed via `/io/in/LCL/<n>/...`.
     - AES50 headamps are addressed via `/io/in/A|B|C/<n>/...`.
     - We expose them as library keys:
@@ -50,18 +41,13 @@ The notes below are based on:
         - phantom: `/headamp/<n>/phantom` and `/headamp/a|b|c/<n>/phantom`
         - name:    `/headamp/.../config_name`
         - color:   `/headamp/.../config_color`
-    - Phantom (`.../vph`) was writable and read back reliably.
     - Gain writes work when Remote Lock is OFF and no competing OSC client is connected.
-    - LCL gain step size is 2.5 dB (matches UI), not 0.5 dB as docs suggest. Occasional read
-      timeouts on individual steps were observed.
-    - Both `/io/in/LCL/<n>/g` (source) and `/ch/<n>/in/set/$g` (channel) write paths work.
-        - Use tag `headamps` for source-type (LCL/A/B/C) access.
+    - LCL gain step size is 2.5 dB (matches UI), not 0.5 dB as docs suggest.
     - Stereo input pairs explain "missing" even LCL patches (e.g. 5/6, 7/8, 9/10...).
-    - AES50 inputs return default values even with no stagebox connected; occasional empty fields
-      are expected (timing/response drop).
+    - AES50 inputs return default values even with no stagebox connected.
 
-7) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
-    - Mapped and read-tested:
+6) Channel preamp settings (/ch/<n>/in/set/* and /ch/<n>/in/conn/*)
+    - Mapped (read):
         - Input mode: `/ch/<n>/in/set/$mode` (M/ST/M-S)
         - Source switches: `/ch/<n>/in/set/srcauto`, `/ch/<n>/in/set/altsrc`
         - Polarity: `/ch/<n>/in/set/inv`
@@ -69,36 +55,34 @@ The notes below are based on:
         - Preamp gain + phantom: `/ch/<n>/in/set/$g`, `/ch/<n>/in/set/$vph`
         - Input delay: `/ch/<n>/in/set/dlymode`, `/ch/<n>/in/set/dly`, `/ch/<n>/in/set/dlyon`
         - Connection: `/ch/<n>/in/conn/grp`, `/ch/<n>/in/conn/in`, `/ch/<n>/in/conn/altgrp`, `/ch/<n>/in/conn/altin`
-    - Write-tested: inv, srcauto, altsrc, trim, bal,
-        dlyon, dly, $vph. (Mode changes were not tested yet.)
+    - Write-tested: inv, srcauto, altsrc, trim, bal, dlyon, dly, $vph.
+    - Input mode writes are not supported.
     - Use tag `channelpreamp` for channel-based access.
 
-8) Sends and “self-sends”
+7) Sends and “self-sends”
     - Bus → bus sends are mapped under tag `busbussends`.
     - Bus → bus sends where the source bus equals the destination bus are ignored by the console.
     - Bus → Matrix `pre` and Bus → Main `pre` are mapped (`/bus/<n>/send/MX<m>/pre`, `/bus/<n>/main/<m>/pre`).
 
-9) `/status` is synthetic
+8) `/status` is synthetic
     - We query `/ ?` for mixer info, but store it under the synthetic output `/status`.
     - WING may answer `/ ?` as `/ ?` or `/*`. `/*` is also used for generic ACK/ERROR strings.
         We only parse `/*` replies that start with `WING,`.
     - `/status` is not a real writable OSC endpoint.
 
-10) USB player playlist behavior
-    - `/play/$songs` returns the *first* song on a simple read. Use a node-level request
-            (e.g. `/play/$songs` with value `?`) to retrieve the full playlist.
-    - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`), not the folder.
-    - Player actions (PLAY/PAUSE/STOP) return `ERROR` if no playlist/file is active.
-    - To play reliably: open a playlist on the console, set `/play/$actidx` and send `PLAY`.
+9) USB player playlist behavior
+    - `/play/$songs` returns the first song on a simple read; use a node-level request
+        (e.g. `/play/$songs` with value `?`) for the full playlist.
+    - `/play/$actlist` points to the playlist file (e.g. `U:/SOUNDS/.plist`).
+    - Actions can return `ERROR` if no playlist/file is active; to play reliably open a
+        playlist on the console, set `/play/$actidx`, then send `PLAY`.
 
-11) USB recorder behavior
+10) USB recorder behavior
     - Check `/usb/rec/state` and `/usb/rec/file`.
     - Trigger actions via `/usb/rec/action` (values: NEWFILE, REC, STOP, PAUSE).
     - Recorder actions: `NEWFILE` → `REC` → `STOP` worked and created a new file.
     - `/usb/rec/path` was removed.
 
-12) WING variants
-    - WINGRACK and WINGCOMPACT use the same mapping with a larger local headamp count (24).
 """
 
 from .mixer_type_base import MixerTypeBase
@@ -178,7 +162,8 @@ class MixerTypeWING(MixerTypeBase):
                     "num_channel": 1,
                 },
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -398,7 +383,8 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_color",
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -448,7 +434,8 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/bus/{num_bus}/config_color",
                 "input_padding": {"num_bus": 1},
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -550,7 +537,8 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/mtx/{num_matrix}/config_color",
                 "input_padding": {"num_matrix": 1},
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -592,7 +580,8 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/dca/{num_dca}/config_color",
                 "input_padding": {"num_dca": 1},
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -634,7 +623,8 @@ class MixerTypeWING(MixerTypeBase):
                 "output": "/main/{num_mains}/config_color",
                 "input_padding": {"num_mains": 1},
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -798,7 +788,8 @@ class MixerTypeWING(MixerTypeBase):
                     "num_head_amp": 1,
                 },
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -849,7 +840,8 @@ class MixerTypeWING(MixerTypeBase):
                     "num_aes50_in": 1,
                 },
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -898,7 +890,8 @@ class MixerTypeWING(MixerTypeBase):
                     "num_aes50_in": 1,
                 },
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
@@ -947,7 +940,8 @@ class MixerTypeWING(MixerTypeBase):
                     "num_aes50_in": 1,
                 },
                 "data_type": "int",
-                "data_index": 0,
+                "data_index": 2,
+                "write_transform": "wing_color_index_to_device",
                 "secondary_output": {
                     "_name": {
                         "forward_function": "wing_color_index_to_name",
