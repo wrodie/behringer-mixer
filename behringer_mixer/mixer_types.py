@@ -3,6 +3,8 @@ from .mixers.mixer_type_xr18 import MixerTypeXR18
 from .mixers.mixer_type_xr16 import MixerTypeXR16
 from .mixers.mixer_type_xr12 import MixerTypeXR12
 from .mixers.mixer_type_wing import MixerTypeWING
+from .mixers.mixer_type_wing_rack import MixerTypeWINGRACK
+from .mixers.mixer_type_wing_compact import MixerTypeWINGCOMPACT
 
 _supported_mixers = [
     "X32",
@@ -10,6 +12,8 @@ _supported_mixers = [
     "XR16",
     "XR12",
     "WING",
+    "WINGRACK",
+    "WINGCOMPACT",
 ]
 
 
@@ -23,6 +27,8 @@ def make_mixer(mixer_type, **kwargs):
             "MixerTypeXR16": MixerTypeXR16,
             "MixerTypeXR12": MixerTypeXR12,
             "MixerTypeWING": MixerTypeWING,
+            "MixerTypeWINGRACK": MixerTypeWINGRACK,
+            "MixerTypeWINGCOMPACT": MixerTypeWINGCOMPACT,
         }
         mixer_class = mixer_class_map.get(mixer_class_name)
         if mixer_class:

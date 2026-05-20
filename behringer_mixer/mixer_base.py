@@ -97,11 +97,14 @@ class MixerBase:
         if addr == "/xinfo":
             self.handle_xinfo(data)
             updates = []
-        # WING responds to the info query ("/?") with either "/*" or "/?" depending
-        # on firmware / implementation.
-        if addr in ("/*", "/?"):
-            self.handle_winfo(data)
-            updates = []
+        # WING responds to the info query ("/?") with either "/?" or "/*" depending on firmware. 
+        # Note: "/*" is also used for generic ACK/error strings (e.g. OK, NODE NOT FOUND).
+        if addr in ("/*", "/?") and data and isinstance(data[0], str):
+            if data[0].startswith("WING,"):
+                self.handle_winfo(data)
+                # Mirror the parsed mixer status into the state map.
+                self._state["/status"] = dict(self._mixer_status)
+                updates = [{"property": "/status", "value": self._state["/status"]}]
         if self._callback_function:
             for row in updates:
                 self._callback_function(row)
@@ -338,7 +341,14 @@ class MixerBase:
         Args:
             data (List[Any]): The data received from the xinfo request.
         """
+        if not data or not isinstance(data[0], str):
+            return
+
         values = data[0].split(",")
+        # Expected: WING,<ip>,<name>,<type>,<serial>,<firmware>,...
+        if len(values) < 6 or values[0] != "WING":
+            return
+
         self._mixer_status = {
             "ip_address": values[1],
             "name": values[2],
