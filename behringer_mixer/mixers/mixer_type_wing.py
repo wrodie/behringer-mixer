@@ -6,6 +6,10 @@ The notes below are based on:
 
 1) `/name` vs `/$name` (and `.../name` writeability)
     - Use `/.../$name` for reads and /../name for writes as the $ is readonly and pulls from channel and source names.
+     I've taken the approach that the write, will write to the channel, but the read pulls from the $name, which is what the UI shows.
+     This means that if you have a channel assigned to a source, the channel name will follow the source name.
+     If you change the channel name, it will not update the source name and if you change the source name, it will update the channel name.
+     This is consistent with how the WING UI behaves.
     - Mapping outputs use `/.../config_name` (library-level key), with input set to `/.../name`.
     - Practical length limits (observed):
         - Most strips: 16 chars
