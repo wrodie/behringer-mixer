@@ -227,17 +227,24 @@ Returns `True` if the connection to the mixer is successful, `False` otherwise.
 
 ## Caveats
 ### Behringer Wing Support
-Behringer Wing support is new and the Wing is quite different to how the other X/M/X series mixers work. Not all the functionality of the the other mixers is supported with the wing currently:
- - No Headamp support
- - No USB recorder support - USB player is supported
- - Bus->Bus send controls (Bus to Matrix/Main is supported)
-
-I don't believe any of these are impossible to achieve, just because they are tricker and I haven't put in the time yet.  I'm not even sure if they are needed.
-
-**WARNING** - This module makes use of OSC subscription to get updated values of controls.  Differently to the X-Series mixers the Wing only supports one client to receive this data at a time.  So this means if you are using another integration that makes use of this same OSC subscription on the mixer, eg [Bitfocus Companion](https://bitfocus.io/companion), then they will compete for the same connection and both won't work properly.  I believe other software such as Wing Edit/WingQ/Mixing Station make use of a different protocol and don't suffer with this problem.
+When setting configuration for channels such as name/colours etc, these may seem not to work in the API if the channel is configured to "Link Customisation to Source". In this case the channel information is overwritten by the source's information
 
 
-## Tests
+**WARNING** - This module makes use of OSC subscription to get updated values of controls.  Differently to the X-Series mixers the Wing only supports one client to receive this data at a time.  So this means if you are using another integration that makes use of this same OSC subscription on the mixer, eg [Bitfocus Companion](https://bitfocus.io/companion), then they will compete for the same connection and both won't work properly.  I believe other software such as Wing Edit/WingQ/Mixing Station make use of a different protocol and don't suffer with this problem.  I have written this module, [https://github.com/wrodie/osc_replicator](https://github.com/wrodie/osc_replicator) to help with these scenarios.
+
+
+## Development and Tests
+
+### Installation Using a Virtual Environment
+
+```sh
+git clone https://github.com/wrodie/behringer-mixer
+cd behringer_mixer
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
 
 These tests attempt to connect to a mixer to exercise get/set from the channels.
 The tests will change the state of the mixer, so it is recommended you save the current settings before running.

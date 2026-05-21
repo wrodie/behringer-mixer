@@ -11,9 +11,8 @@ async def test_mixer_x32():
     with open("tests/x32mapping.json", "r") as file:
         json_data = json.load(file)
         mixer = mixer_api.create("X32", ip="192.168.1.1")
-        mapping = json.dumps(mixer.dump_mapping())
-        existing = json.dumps(json_data)
-        assert mapping == existing
+        mapping = mixer.dump_mapping()
+        assert mapping == json_data
 
 
 @pytest.mark.asyncio
@@ -24,7 +23,6 @@ async def test_mixer_xr16():
         mixer = mixer_api.create("XR16", ip="192.168.1.1")
         mapping = json.dumps(mixer.dump_mapping())
         existing = json.dumps(json_data)
-        print(mapping)
         assert mapping == existing
 
 
@@ -34,6 +32,5 @@ async def test_mixer_wing():
     with open("tests/wingmapping.json", "r") as file:
         json_data = json.load(file)
         mixer = mixer_api.create("WING", ip="192.168.1.1")
-        mapping = json.dumps(mixer.dump_mapping())
-        existing = json.dumps(json_data)
-        assert mapping == existing
+        mapping = mixer.dump_mapping()
+        assert mapping == json_data

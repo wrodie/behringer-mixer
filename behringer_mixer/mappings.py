@@ -62,6 +62,13 @@ def expand_address(mixer, address_tuple, reverse_mappings):
                 )
                 new_row["input"] = input_build
                 new_row["output"] = output_build
+                write_path = row.get("write_path")
+                if write_path:
+                    write_path_build = write_path.replace(
+                        "{" + match_var + "}",
+                        str(number).zfill(input_zfill_num),
+                    )
+                    new_row["write_path"] = write_path_build
                 processlist.append(
                     new_row
                 )  # add to the list to check if there are any other match variables
