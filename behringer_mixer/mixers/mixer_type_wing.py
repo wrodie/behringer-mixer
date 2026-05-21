@@ -5,16 +5,15 @@ The notes below are based on:
 - Multiple live tests against a real console fimware 3.1.
 
 1) `/name` vs `/$name` (and `.../name` writeability)
-    - Use `/.../name` for both reads and writes.
-    - The `/$name` endpoints may respond to reads, but they are not reliably writable
-      (they behave like "read-only / linked" reflection).
+    - Use `/.../$name` for reads and /../name for writes as the $ is readonly and pulls from channel and source names.
     - Mapping outputs use `/.../config_name` (library-level key), with input set to `/.../name`.
     - Practical length limits (observed):
         - Most strips: 16 chars
         - DCA: 8 chars
 
 2) `/col` vs `/$col` (and `/col` reply payload format)
-    - Use `/.../col` for reads and writes; `/$col` reads may work, writes are unreliable.
+    - /$col are ReadOnly keys.  They are often aggregated, e.g. /$mute is the aggregation of channel and DCA mute.
+        Use `/.../$col` for reads and /.../col for writes;
     - WING’s reply to `/.../col` is *multi-value*:
         - element[0]: 1-based color index as a STRING ("1".."18")
         - element[1]: normalized float (approximately (idx-1)/17)
@@ -142,7 +141,8 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "channels",
-                "input": "/ch/{num_channel}/mute",
+                "input": "/ch/{num_channel}/$mute",
+                "write_path": "/ch/{num_channel}/mute",
                 "output": "/ch/{num_channel}/mix_on",
                 "input_padding": {
                     "num_channel": 1,
@@ -155,12 +155,14 @@ class MixerTypeWING(MixerTypeBase):
                 "input_padding": {
                     "num_channel": 1,
                 },
-                "input": "/ch/{num_channel}/name",
+                "input": "/ch/{num_channel}/$name",
+                "write_path": "/ch/{num_channel}/name",
                 "output": "/ch/{num_channel}/config_name",
             },
             {
                 "tag": "channels",
-                "input": "/ch/{num_channel}/col",
+                "input": "/ch/{num_channel}/$col",
+                "write_path": "/ch/{num_channel}/col",
                 "output": "/ch/{num_channel}/config_color",
                 "input_padding": {
                     "num_channel": 1,
@@ -369,7 +371,8 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "auxins",
-                "input": "/aux/{num_auxin}/mute",
+                "input": "/aux/{num_auxin}/$mute",
+                "write_path": "/aux/{num_auxin}/mute",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/mix_on",
                 "data_type": "boolean_inverted",
@@ -377,13 +380,15 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "auxins",
-                "input": "/aux/{num_auxin}/name",
+                "input": "/aux/{num_auxin}/$name",
+                "write_path": "/aux/{num_auxin}/name",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_name",
             },
             {
                 "tag": "auxins",
-                "input": "/aux/{num_auxin}/col",
+                "input": "/aux/{num_auxin}/$col",
+                "write_path": "/aux/{num_auxin}/col",
                 "input_padding": {"num_auxin": 1},
                 "output": "/auxin/{num_auxin}/config_color",
                 "data_type": "int",
@@ -420,7 +425,8 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "busses",
-                "input": "/bus/{num_bus}/mute",
+                "input": "/bus/{num_bus}/$mute",
+                "write_path": "/bus/{num_bus}/mute",
                 "output": "/bus/{num_bus}/mix_on",
                 "input_padding": {"num_bus": 1},
                 "data_type": "boolean_inverted",
@@ -428,13 +434,15 @@ class MixerTypeWING(MixerTypeBase):
             },
             {
                 "tag": "busses",
-                "input": "/bus/{num_bus}/name",
+                "input": "/bus/{num_bus}/$name",
+                "write_path": "/bus/{num_bus}/name",
                 "output": "/bus/{num_bus}/config_name",
                 "input_padding": {"num_bus": 1},
             },
             {
                 "tag": "busses",
-                "input": "/bus/{num_bus}/col",
+                "input": "/bus/{num_bus}/$col",
+                "write_path": "/bus/{num_bus}/col",
                 "output": "/bus/{num_bus}/config_color",
                 "input_padding": {"num_bus": 1},
                 "data_type": "int",

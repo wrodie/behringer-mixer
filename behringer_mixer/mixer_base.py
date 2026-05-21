@@ -273,7 +273,11 @@ class MixerBase:
             reverse_map = {v: k for k, v in address_data["mapping"].items()}
             value = reverse_map[value]
         if address_data:
-            await self.send(address_data["input"], value)
+            target_address = address_data.get("write_path", address_data.get("input"))
+            if not target_address:
+                self.logger.warning(f"No target address (write_path or input) found for {address}")
+                return
+            await self.send(target_address, value)
             await self.query(address_data["input"])
 
     def last_received(self) -> float:
